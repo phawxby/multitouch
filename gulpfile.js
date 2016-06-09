@@ -13,7 +13,7 @@ gulp.task('ts', function () {
         .pipe(ts({
             noImplicitAny: true,
             out: 'multitouch.js'
-        }))
+        }).on('error', gutil.log))
         .pipe(gulp.dest('./dist'))
         .pipe(gulp.dest('./examples/js'));
 });
