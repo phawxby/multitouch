@@ -1,0 +1,18 @@
+@import '../../node_modules/normalize.css/normalize';
+
+html {
+    
+}
+
+body {
+    padding: 1rem;
+}
+
+.block {
+    display: inline-block;
+    width: 5rem;
+    height: 5rem; 
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin-right: 1rem;
+}
