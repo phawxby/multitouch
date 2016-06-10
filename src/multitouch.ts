@@ -221,11 +221,8 @@ module Multitouch
                                         {
                                             handled = true;
 
-
                                             interaction.targetElm.dataset["passclick"] = true.toString();
                                             interaction.targetElm.click();
-
-                                            //console.log(`Click event!`);
                                         }
                                     }
                                 }
@@ -256,18 +253,16 @@ module Multitouch
                 if (target.matches('.mt-draggable')) 
                 {
                     let dragTarget = this.closestParent(target, ".mt-draggable-target") || target;
-                    let compStyle;
-                    if (!dragTarget.style.position && !(compStyle = window.getComputedStyle(dragTarget)).position) {
+                    let styleVals = this.getStyleValues(dragTarget);
+
+                    if(!styleVals.isPositioned){
                         dragTarget.style.position = "relative";
                     }
-                    var currentTop = parseInt(dragTarget.style.top || compStyle.top) || 0;
-                    var currentLeft = parseInt(dragTarget.style.left || compStyle.left) || 0;
-
-                    dragTarget.style.top = (currentTop + e.detail.y) + "px";
-                    dragTarget.style.left = (currentLeft + e.detail.x) + "px";
+                    dragTarget.style.top = (styleVals.top + e.detail.y) + "px";
+                    dragTarget.style.left = (styleVals.left + e.detail.x) + "px";
                 }
             });
-        }
+        };
 
         private setupScaleHandler = () => {
             this.document.addEventListener("mt-scale", (e : CustomEvent) => {
@@ -278,23 +273,36 @@ module Multitouch
 
                     let scaleTarget = this.closestParent(target, ".mt-scaleable-target") || target;
 
-                    if (!scaleTarget.style.position) {
+                    let styleVals = this.getStyleValues(scaleTarget);
+
+                    if(!styleVals.isPositioned){
                         scaleTarget.style.position = "relative";
                     }
-
-                    var currentTop = parseInt(scaleTarget.style.top) || 0;
-                    var currentLeft = parseInt(scaleTarget.style.left) || 0;
-                    var currentWidth = parseInt(scaleTarget.style.width) || 0;
-                    var currentHeight = parseInt(scaleTarget.style.height) || 0;
-
-                    scaleTarget.style.top = (currentTop + e.detail.y) + "px";
-                    scaleTarget.style.left = (currentLeft + e.detail.x) + "px";
-                    scaleTarget.style.width = (currentWidth + e.detail.w) + "px";
-                    scaleTarget.style.height = (currentHeight + e.detail.h) + "px";
+                    scaleTarget.style.top = (styleVals.top + e.detail.y) + "px";
+                    scaleTarget.style.left = (styleVals.left + e.detail.x) + "px";
+                    scaleTarget.style.width = (styleVals.width + e.detail.w) + "px";
+                    scaleTarget.style.height = (styleVals.height + e.detail.h) + "px";
                 }
             });
         };
 
+        /**
+         * Gets the current style values required for positioning and scaling an element.
+         */
+        private getStyleValues = (target: HTMLElement): { isPositioned: boolean; top: number; left: number; height: number; width: number } =>{
+            let compStyle: CSSStyleDeclaration;
+            return {
+                isPositioned: !(!target.style.position && !(compStyle = window.getComputedStyle(target)).position),
+                top: parseInt(target.style.top || (compStyle || (compStyle = window.getComputedStyle(target))).top) || 0,
+                left: parseInt(target.style.left || (compStyle || (compStyle = window.getComputedStyle(target))).left) || 0,
+                width: parseInt(target.style.width || (compStyle || (compStyle = window.getComputedStyle(target))).width) || 0,
+                height: parseInt(target.style.height || (compStyle || (compStyle = window.getComputedStyle(target))).height) || 0,
+            };
+        };
+
+        /**
+         * Finds the closest parent element using the specified selector.
+         */
         private closestParent = (element: HTMLElement, selector: string): HTMLElement => {
             let target = element, 
                 foundTarget = false;
@@ -437,8 +445,5 @@ module Multitouch
 (function(d : HTMLDocument) {
 
     let mt = new Multitouch.Manager(d);
-    mt.init();
-    mt.setupDragHandler();
-    mt.setupScaleHandler();
 
 })(document);

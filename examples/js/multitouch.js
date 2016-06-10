@@ -10,14 +10,12 @@ var Multitouch;
                     var target = e.target;
                     if (target.matches('.mt-draggable')) {
                         var dragTarget = _this.closestParent(target, ".mt-draggable-target") || target;
-                        var compStyle = void 0;
-                        if (!dragTarget.style.position && !(compStyle = window.getComputedStyle(dragTarget)).position) {
+                        var styleVals = _this.getStyleValues(dragTarget);
+                        if (!styleVals.isPositioned) {
                             dragTarget.style.position = "relative";
                         }
-                        var currentTop = parseInt(dragTarget.style.top || compStyle.top) || 0;
-                        var currentLeft = parseInt(dragTarget.style.left || compStyle.left) || 0;
-                        dragTarget.style.top = (currentTop + e.detail.y) + "px";
-                        dragTarget.style.left = (currentLeft + e.detail.x) + "px";
+                        dragTarget.style.top = (styleVals.top + e.detail.y) + "px";
+                        dragTarget.style.left = (styleVals.left + e.detail.x) + "px";
                     }
                 });
             };
@@ -26,20 +24,33 @@ var Multitouch;
                     var target = e.target;
                     if (target.matches('.mt-scaleable')) {
                         var scaleTarget = _this.closestParent(target, ".mt-scaleable-target") || target;
-                        if (!scaleTarget.style.position) {
+                        var styleVals = _this.getStyleValues(scaleTarget);
+                        if (!styleVals.isPositioned) {
                             scaleTarget.style.position = "relative";
                         }
-                        var currentTop = parseInt(scaleTarget.style.top) || 0;
-                        var currentLeft = parseInt(scaleTarget.style.left) || 0;
-                        var currentWidth = parseInt(scaleTarget.style.width) || 0;
-                        var currentHeight = parseInt(scaleTarget.style.height) || 0;
-                        scaleTarget.style.top = (currentTop + e.detail.y) + "px";
-                        scaleTarget.style.left = (currentLeft + e.detail.x) + "px";
-                        scaleTarget.style.width = (currentWidth + e.detail.w) + "px";
-                        scaleTarget.style.height = (currentHeight + e.detail.h) + "px";
+                        scaleTarget.style.top = (styleVals.top + e.detail.y) + "px";
+                        scaleTarget.style.left = (styleVals.left + e.detail.x) + "px";
+                        scaleTarget.style.width = (styleVals.width + e.detail.w) + "px";
+                        scaleTarget.style.height = (styleVals.height + e.detail.h) + "px";
                     }
                 });
             };
+            /**
+             * Gets the current style values required for positioning and scaling an element.
+             */
+            this.getStyleValues = function (target) {
+                var compStyle;
+                return {
+                    isPositioned: !(!target.style.position && !(compStyle = window.getComputedStyle(target)).position),
+                    top: parseInt(target.style.top || (compStyle || (compStyle = window.getComputedStyle(target))).top) || 0,
+                    left: parseInt(target.style.left || (compStyle || (compStyle = window.getComputedStyle(target))).left) || 0,
+                    width: parseInt(target.style.width || (compStyle || (compStyle = window.getComputedStyle(target))).width) || 0,
+                    height: parseInt(target.style.height || (compStyle || (compStyle = window.getComputedStyle(target))).height) || 0
+                };
+            };
+            /**
+             * Finds the closest parent element using the specified selector.
+             */
             this.closestParent = function (element, selector) {
                 var target = element, foundTarget = false;
                 while (!(foundTarget = target.matches(selector)) && target.parentElement !== null) {
@@ -311,7 +322,4 @@ var Multitouch;
 })(Multitouch || (Multitouch = {}));
 (function (d) {
     var mt = new Multitouch.Manager(d);
-    mt.init();
-    mt.setupDragHandler();
-    mt.setupScaleHandler();
 })(document);
