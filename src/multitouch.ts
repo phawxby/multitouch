@@ -70,8 +70,8 @@ module Multitouch
                 let id = "mouse";
                 let target = <HTMLElement>evt.target;
 
-                if (target.dataset["touch"] && !!target.dataset["touch"]) {
-                    if (evt.type.indexOf("up")) {
+                if (target.dataset["touch"] === true.toString()) {
+                    if (evt.type.indexOf("up") >= 0) {
                         target.dataset["touch"] = false.toString();
                     }
 
