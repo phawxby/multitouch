@@ -53,9 +53,15 @@ var Multitouch;
                 var id = "mouse";
                 var target = evt.target;
                 if (evt.type.indexOf("click") >= 0) {
-                    evt.stopImmediatePropagation();
-                    evt.preventDefault();
-                    return;
+                    if (target.dataset["passclick"] === true.toString()) {
+                        target.dataset["passclick"] = false.toString();
+                        return;
+                    }
+                    else {
+                        evt.stopImmediatePropagation();
+                        evt.preventDefault();
+                        return;
+                    }
                 }
                 if (target.dataset["touch"] === true.toString()) {
                     if (evt.type.indexOf("up") >= 0) {
@@ -83,85 +89,97 @@ var Multitouch;
             var interactions = this.interactions;
             // It's just easier iterating over arrays
             var interactionsArr = Object.keys(interactions).map(function (key) { return interactions[key]; });
-            for (var _i = 0, interactionsArr_1 = interactionsArr; _i < interactionsArr_1.length; _i++) {
-                var interaction = interactionsArr_1[_i];
-                if (interaction.updated) {
-                    var handled = false;
-                    // First handle scale
-                    if (!handled && interaction.closestScaleElm) {
-                        var matchingScaleInteraction = void 0;
-                        for (var _a = 0, interactionsArr_2 = interactionsArr; _a < interactionsArr_2.length; _a++) {
-                            var tryMatchInteaction = interactionsArr_2[_a];
-                            if (interaction != tryMatchInteaction && tryMatchInteaction.closestScaleElm == interaction.closestScaleElm) {
-                                matchingScaleInteraction = tryMatchInteaction;
-                                break;
+            if (interactionsArr.length > 0) {
+                for (var _i = 0, interactionsArr_1 = interactionsArr; _i < interactionsArr_1.length; _i++) {
+                    var interaction = interactionsArr_1[_i];
+                    if (interaction.updated) {
+                        var handled = false;
+                        // First handle scale
+                        if (!handled && interaction.closestScaleElm) {
+                            var matchingScaleInteraction = void 0;
+                            for (var _a = 0, interactionsArr_2 = interactionsArr; _a < interactionsArr_2.length; _a++) {
+                                var tryMatchInteaction = interactionsArr_2[_a];
+                                if (interaction != tryMatchInteaction && tryMatchInteaction.closestScaleElm == interaction.closestScaleElm) {
+                                    matchingScaleInteraction = tryMatchInteaction;
+                                    break;
+                                }
+                            }
+                            if (matchingScaleInteraction) {
+                                // Logic here to emit scaling events based on the movement of the two interaction points
+                                // The plan is to get the left/top most point and based on their previous event set the x/y
+                                // position change (See the drag event below)
+                                // Then get the right/bottom most point and based on their previous event set the width/height 
+                                // change
+                                // Emiting based on change allows us to be very relative with our data and it would work for relative or absolute
+                                // elements
+                                var previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
+                                var currentPosA = interaction.currentEvent.position;
+                                var previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
+                                var currentPosB = matchingScaleInteraction.currentEvent.position;
+                                if (previousPosA && currentPosA && previousPosB && currentPosB) {
+                                    var xDiffA = currentPosA.pageX - previousPosA.pageX;
+                                    var yDiffA = currentPosA.pageY - previousPosA.pageY;
+                                    var xDiffB = currentPosB.pageX - previousPosB.pageX;
+                                    var yDiffB = currentPosB.pageY - previousPosB.pageY;
+                                    var xDiff_1 = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
+                                    var yDiff_1 = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
+                                    var wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff_1 * -1));
+                                    var hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff_1 * -1));
+                                    var evt = new CustomEvent("scale");
+                                    evt.initCustomEvent("scale", true, true, { "x": xDiff_1, "y": yDiff_1, "w": wDiff, "h": hDiff });
+                                    interaction.targetElm.dispatchEvent(evt);
+                                    console.log("Scale event x=" + xDiff_1 + " y=" + yDiff_1 + " w=" + wDiff + " h=" + hDiff);
+                                }
+                                handled = true;
                             }
                         }
-                        if (matchingScaleInteraction) {
-                            // Logic here to emit scaling events based on the movement of the two interaction points
-                            // The plan is to get the left/top most point and based on their previous event set the x/y
-                            // position change (See the drag event below)
-                            // Then get the right/bottom most point and based on their previous event set the width/height 
-                            // change
-                            // Emiting based on change allows us to be very relative with our data and it would work for relative or absolute
-                            // elements
-                            var previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
-                            var currentPosA = interaction.currentEvent.position;
-                            var previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
-                            var currentPosB = matchingScaleInteraction.currentEvent.position;
-                            if (previousPosA && currentPosA && previousPosB && currentPosB) {
-                                var xDiffA = currentPosA.pageX - previousPosA.pageX;
-                                var yDiffA = currentPosA.pageY - previousPosA.pageY;
-                                var xDiffB = currentPosB.pageX - previousPosB.pageX;
-                                var yDiffB = currentPosB.pageY - previousPosB.pageY;
-                                var xDiff_1 = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
-                                var yDiff_1 = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
-                                var wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff_1 * -1));
-                                var hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff_1 * -1));
-                                console.log("Scale event x=" + xDiff_1 + " y=" + yDiff_1 + " w=" + wDiff + " h=" + hDiff);
+                        // console.log(interaction.targetElm);
+                        if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending) {
+                            if (interaction.previousEvent) {
+                                var previousPos = interaction.previousEvent.position;
+                                var currentPos = interaction.currentEvent.position;
+                                if (previousPos && currentPos) {
+                                    var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
+                                    var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
+                                    //let moveDragEvent = new Event("drag");
+                                    var evt = new CustomEvent("drag");
+                                    evt.initCustomEvent("drag", true, true, { "x": xDiff, "y": yDiff });
+                                    interaction.targetElm.dispatchEvent(evt);
+                                    console.log("Drag event x=" + xDiff + " y=" + yDiff);
+                                }
                             }
                             handled = true;
                         }
-                    }
-                    if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending) {
-                        if (interaction.previousEvent) {
-                            var previousPos = interaction.previousEvent.position;
-                            var currentPos = interaction.currentEvent.position;
-                            if (previousPos && currentPos) {
-                                var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
-                                var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
-                                //let moveDragEvent = new Event("drag");
-                                console.log("Drag event x=" + xDiff + " y=" + yDiff);
-                            }
-                        }
-                        handled = true;
-                    }
-                    if (!handled && interaction.targetElm) {
-                        if (interaction.startEvent && interaction.currentEvent && interaction.ending) {
-                            if (interaction.currentEvent.time - interaction.startEvent.time < 300) {
-                                var previousPos = interaction.previousEvent.position;
-                                var currentPos = interaction.currentEvent.position;
-                                // We could easily use this x-y diff data to be able to 
-                                // emit swipe events and what not too
-                                if (previousPos && currentPos) {
-                                    var xDiff_2 = currentPos.pageX - previousPos.pageX;
-                                    xDiff_2 = xDiff_2 < 0 ? xDiff_2 * -1 : 0;
-                                    var yDiff_2 = currentPos.pageY - previousPos.pageY;
-                                    yDiff_2 = yDiff_2 < 0 ? yDiff_2 * -1 : 0;
-                                    if (xDiff_2 < 30 && yDiff_2 < 30) {
-                                        console.log("Click event!");
+                        if (!handled && interaction.targetElm) {
+                            if (interaction.startEvent && interaction.currentEvent && interaction.ending) {
+                                if (interaction.currentEvent.time - interaction.startEvent.time < 300) {
+                                    var previousPos = interaction.previousEvent.position;
+                                    var currentPos = interaction.currentEvent.position;
+                                    // We could easily use this x-y diff data to be able to 
+                                    // emit swipe events and what not too
+                                    if (previousPos && currentPos) {
+                                        var xDiff_2 = currentPos.pageX - previousPos.pageX;
+                                        xDiff_2 = xDiff_2 < 0 ? xDiff_2 * -1 : 0;
+                                        var yDiff_2 = currentPos.pageY - previousPos.pageY;
+                                        yDiff_2 = yDiff_2 < 0 ? yDiff_2 * -1 : 0;
+                                        if (xDiff_2 < 30 && yDiff_2 < 30) {
+                                            handled = true;
+                                            interaction.targetElm.dataset["passclick"] = true.toString();
+                                            interaction.targetElm.click();
+                                            console.log("Click event!");
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (handled) {
-                        interaction.currentEvent.event.preventDefault();
-                        interaction.currentEvent.event.stopImmediatePropagation();
-                        this.interactions[interaction.key].updated = false;
-                    }
-                    if (interaction.ending) {
-                        delete this.interactions[interaction.key];
+                        if (handled) {
+                            interaction.currentEvent.event.preventDefault();
+                            interaction.currentEvent.event.stopImmediatePropagation();
+                            this.interactions[interaction.key].updated = false;
+                        }
+                        if (interaction.ending) {
+                            delete this.interactions[interaction.key];
+                        }
                     }
                 }
             }

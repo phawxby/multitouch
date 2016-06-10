@@ -60,5 +60,5 @@ gulp.task('serve', ['watch'], function() {
     server.notify.apply(server, [file]);
   });
 
-  opn('http://localhost:3000/', {app: ['chrome', '--incognito']});
+  opn('http://localhost:3000/', {app: ['chrome', '']});
 });

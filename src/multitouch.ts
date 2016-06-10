@@ -71,9 +71,17 @@ module Multitouch
                 let target = <HTMLElement>evt.target;
                 
                 if (evt.type.indexOf("click") >= 0) {
-                    evt.stopImmediatePropagation();
-                    evt.preventDefault();
-                    return;
+                    if (target.dataset["passclick"] === true.toString()) 
+                    {
+                        target.dataset["passclick"] = false.toString();
+                        return;
+                    } 
+                    else 
+                    {
+                        evt.stopImmediatePropagation();
+                        evt.preventDefault();
+                        return;
+                    }
                 }
 
                 if (target.dataset["touch"] === true.toString()) {
@@ -110,117 +118,133 @@ module Multitouch
             // It's just easier iterating over arrays
             let interactionsArr = Object.keys(interactions).map(function(key) { return interactions[key]; });
 
-            for (let interaction of interactionsArr)
+            if (interactionsArr.length > 0)
             {
-                if (interaction.updated) 
+                for (let interaction of interactionsArr)
                 {
-                    let handled = false;
-
-                    // First handle scale
-                    if (!handled && interaction.closestScaleElm) 
+                    if (interaction.updated) 
                     {
-                        let matchingScaleInteraction : Interaction;
+                        let handled = false;
 
-                        for (let tryMatchInteaction of interactionsArr)
+                        // First handle scale
+                        if (!handled && interaction.closestScaleElm) 
                         {
-                            if (interaction != tryMatchInteaction && tryMatchInteaction.closestScaleElm == interaction.closestScaleElm) {
-                                matchingScaleInteraction = tryMatchInteaction;
-                                break;
-                            }
-                        }
+                            let matchingScaleInteraction : Interaction;
 
-                        if (matchingScaleInteraction)
-                        {
-                            // Logic here to emit scaling events based on the movement of the two interaction points
-                            // The plan is to get the left/top most point and based on their previous event set the x/y
-                            // position change (See the drag event below)
-                            // Then get the right/bottom most point and based on their previous event set the width/height 
-                            // change
-                            // Emiting based on change allows us to be very relative with our data and it would work for relative or absolute
-                            // elements
-
-                            let previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
-                            let currentPosA = interaction.currentEvent.position;
-                            let previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
-                            let currentPosB = matchingScaleInteraction.currentEvent.position;
-
-                            if (previousPosA && currentPosA && previousPosB && currentPosB)
+                            for (let tryMatchInteaction of interactionsArr)
                             {
-                                let xDiffA = currentPosA.pageX - previousPosA.pageX;
-                                let yDiffA = currentPosA.pageY - previousPosA.pageY;
-                                let xDiffB = currentPosB.pageX - previousPosB.pageX;
-                                let yDiffB = currentPosB.pageY - previousPosB.pageY;
-
-                                let xDiff = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
-                                let yDiff = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
-                                let wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff * -1));
-                                let hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff * -1));
-
-                                console.log(`Scale event x=${xDiff} y=${yDiff} w=${wDiff} h=${hDiff}`);
+                                if (interaction != tryMatchInteaction && tryMatchInteaction.closestScaleElm == interaction.closestScaleElm) {
+                                    matchingScaleInteraction = tryMatchInteaction;
+                                    break;
+                                }
                             }
 
-                            handled = true;
-                        }
-                    }
-
-                    if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending)
-                    {
-                        if (interaction.previousEvent)
-                        {
-                            let previousPos = interaction.previousEvent.position;
-                            let currentPos = interaction.currentEvent.position;
-
-                            if (previousPos && currentPos)
+                            if (matchingScaleInteraction)
                             {
-                                var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
-                                var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
+                                // Logic here to emit scaling events based on the movement of the two interaction points
+                                // The plan is to get the left/top most point and based on their previous event set the x/y
+                                // position change (See the drag event below)
+                                // Then get the right/bottom most point and based on their previous event set the width/height 
+                                // change
+                                // Emiting based on change allows us to be very relative with our data and it would work for relative or absolute
+                                // elements
 
-                                //let moveDragEvent = new Event("drag");
-                                console.log(`Drag event x=${xDiff} y=${yDiff}`);
+                                let previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
+                                let currentPosA = interaction.currentEvent.position;
+                                let previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
+                                let currentPosB = matchingScaleInteraction.currentEvent.position;
+
+                                if (previousPosA && currentPosA && previousPosB && currentPosB)
+                                {
+                                    let xDiffA = currentPosA.pageX - previousPosA.pageX;
+                                    let yDiffA = currentPosA.pageY - previousPosA.pageY;
+                                    let xDiffB = currentPosB.pageX - previousPosB.pageX;
+                                    let yDiffB = currentPosB.pageY - previousPosB.pageY;
+
+                                    let xDiff = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
+                                    let yDiff = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
+                                    let wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff * -1));
+                                    let hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff * -1));
+
+                                    let evt = new CustomEvent("scale");
+                                    evt.initCustomEvent("scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
+                                    interaction.targetElm.dispatchEvent(evt);
+                                    console.log(`Scale event x=${xDiff} y=${yDiff} w=${wDiff} h=${hDiff}`);
+                                }
+
+                                handled = true;
                             }
                         }
 
-                        handled = true;
-                    }
-
-                    if (!handled && interaction.targetElm)
-                    {
-                        if (interaction.startEvent && interaction.currentEvent && interaction.ending) 
+                        // console.log(interaction.targetElm);
+                        if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending)
                         {
-                            if (interaction.currentEvent.time - interaction.startEvent.time < 300)
+                            if (interaction.previousEvent)
                             {
                                 let previousPos = interaction.previousEvent.position;
                                 let currentPos = interaction.currentEvent.position;
 
-                                // We could easily use this x-y diff data to be able to 
-                                // emit swipe events and what not too
                                 if (previousPos && currentPos)
                                 {
-                                    let xDiff = currentPos.pageX - previousPos.pageX;
-                                    xDiff = xDiff < 0 ? xDiff * -1 : 0;
-                                    let yDiff = currentPos.pageY - previousPos.pageY;
-                                    yDiff = yDiff < 0 ? yDiff * -1 : 0;
+                                    var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
+                                    var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
 
-                                    if (xDiff < 30 && yDiff < 30)
+                                    //let moveDragEvent = new Event("drag");
+                                    let evt = new CustomEvent("drag");
+                                    evt.initCustomEvent("drag", true, true, { "x" : xDiff, "y" : yDiff });
+                                    interaction.targetElm.dispatchEvent(evt);
+                                    console.log(`Drag event x=${xDiff} y=${yDiff}`);
+                                }
+                            }
+
+                            handled = true;
+                        }
+
+                        if (!handled && interaction.targetElm)
+                        {
+                            if (interaction.startEvent && interaction.currentEvent && interaction.ending) 
+                            {
+                                if (interaction.currentEvent.time - interaction.startEvent.time < 300)
+                                {
+                                    let previousPos = interaction.previousEvent.position;
+                                    let currentPos = interaction.currentEvent.position;
+
+                                    // We could easily use this x-y diff data to be able to 
+                                    // emit swipe events and what not too
+                                    if (previousPos && currentPos)
                                     {
-                                        console.log(`Click event!`);
+                                        let xDiff = currentPos.pageX - previousPos.pageX;
+                                        xDiff = xDiff < 0 ? xDiff * -1 : 0;
+                                        let yDiff = currentPos.pageY - previousPos.pageY;
+                                        yDiff = yDiff < 0 ? yDiff * -1 : 0;
+
+                                        if (xDiff < 30 && yDiff < 30)
+                                        {
+                                            handled = true;
+
+
+                                            interaction.targetElm.dataset["passclick"] = true.toString();
+                                            interaction.targetElm.click();
+
+                                            console.log(`Click event!`);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    if (handled)
-                    {
-                        interaction.currentEvent.event.preventDefault();
-                        interaction.currentEvent.event.stopImmediatePropagation();
+                        if (handled)
+                        {
+                            interaction.currentEvent.event.preventDefault();
+                            interaction.currentEvent.event.stopImmediatePropagation();
 
-                        this.interactions[interaction.key].updated = false;
-                    }
+                            this.interactions[interaction.key].updated = false;
+                        }
 
-                    if (interaction.ending)
-                    {
-                        delete this.interactions[interaction.key];
+                        if (interaction.ending)
+                        {
+                            delete this.interactions[interaction.key];
+                        }
                     }
                 }
             }
