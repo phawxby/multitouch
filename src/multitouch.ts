@@ -190,11 +190,9 @@ module Multitouch
                                     var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
                                     var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
 
-                                    //let moveDragEvent = new Event("drag");
                                     let evt = new CustomEvent("mt-drag");
                                     evt.initCustomEvent("mt-drag", true, true, { "x" : xDiff, "y" : yDiff });
                                     interaction.targetElm.dispatchEvent(evt);
-                                    //console.log(`Drag event x=${xDiff} y=${yDiff}`);
                                 }
                             }
 

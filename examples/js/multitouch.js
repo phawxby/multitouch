@@ -185,7 +185,6 @@ var Multitouch;
                                 if (previousPos && currentPos) {
                                     var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
                                     var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
-                                    //let moveDragEvent = new Event("drag");
                                     var evt = new CustomEvent("mt-drag");
                                     evt.initCustomEvent("mt-drag", true, true, { "x": xDiff, "y": yDiff });
                                     interaction.targetElm.dispatchEvent(evt);
