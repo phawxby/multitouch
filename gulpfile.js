@@ -11,8 +11,7 @@ var opn = require('opn');
 gulp.task('ts', function () {
     return gulp.src('./src/**/*.ts')
         .pipe(ts({
-            noImplicitAny: true,
-            out: 'multitouch.js'
+            noImplicitAny: true
         }).on('error', gutil.log))
         .pipe(gulp.dest('./dist'))
         .pipe(gulp.dest('./examples/js'));
