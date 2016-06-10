@@ -89,6 +89,7 @@ var Multitouch;
             var interactions = this.interactions;
             // It's just easier iterating over arrays
             var interactionsArr = Object.keys(interactions).map(function (key) { return interactions[key]; });
+            console.log(interactionsArr);
             if (interactionsArr.length > 0) {
                 for (var _i = 0, interactionsArr_1 = interactionsArr; _i < interactionsArr_1.length; _i++) {
                     var interaction = interactionsArr_1[_i];
@@ -125,10 +126,9 @@ var Multitouch;
                                     var yDiff_1 = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
                                     var wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff_1 * -1));
                                     var hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff_1 * -1));
-                                    var evt = new CustomEvent("scale");
-                                    evt.initCustomEvent("scale", true, true, { "x": xDiff_1, "y": yDiff_1, "w": wDiff, "h": hDiff });
+                                    var evt = new CustomEvent("mt-scale");
+                                    evt.initCustomEvent("mt-scale", true, true, { "x": xDiff_1, "y": yDiff_1, "w": wDiff, "h": hDiff });
                                     interaction.targetElm.dispatchEvent(evt);
-                                    console.log("Scale event x=" + xDiff_1 + " y=" + yDiff_1 + " w=" + wDiff + " h=" + hDiff);
                                 }
                                 handled = true;
                             }
@@ -142,10 +142,9 @@ var Multitouch;
                                     var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
                                     var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
                                     //let moveDragEvent = new Event("drag");
-                                    var evt = new CustomEvent("drag");
-                                    evt.initCustomEvent("drag", true, true, { "x": xDiff, "y": yDiff });
+                                    var evt = new CustomEvent("mt-drag");
+                                    evt.initCustomEvent("mt-drag", true, true, { "x": xDiff, "y": yDiff });
                                     interaction.targetElm.dispatchEvent(evt);
-                                    console.log("Drag event x=" + xDiff + " y=" + yDiff);
                                 }
                             }
                             handled = true;
@@ -153,7 +152,7 @@ var Multitouch;
                         if (!handled && interaction.targetElm) {
                             if (interaction.startEvent && interaction.currentEvent && interaction.ending) {
                                 if (interaction.currentEvent.time - interaction.startEvent.time < 300) {
-                                    var previousPos = interaction.previousEvent.position;
+                                    var previousPos = interaction.startEvent.position;
                                     var currentPos = interaction.currentEvent.position;
                                     // We could easily use this x-y diff data to be able to 
                                     // emit swipe events and what not too
@@ -166,7 +165,6 @@ var Multitouch;
                                             handled = true;
                                             interaction.targetElm.dataset["passclick"] = true.toString();
                                             interaction.targetElm.click();
-                                            console.log("Click event!");
                                         }
                                     }
                                 }
@@ -183,6 +181,38 @@ var Multitouch;
                     }
                 }
             }
+        };
+        Manager.prototype.setupDragHandler = function () {
+            document.addEventListener("mt-drag", function (e) {
+                var target = e.target;
+                if (target.matches('.mt-draggable')) {
+                    if (!target.style.position) {
+                        target.style.position = "relative";
+                    }
+                    var currentTop = parseInt(target.style.top) || 0;
+                    var currentLeft = parseInt(target.style.left) || 0;
+                    target.style.top = (currentTop + e.detail.y) + "px";
+                    target.style.left = (currentLeft + e.detail.x) + "px";
+                }
+            });
+        };
+        Manager.prototype.setupScaleHandler = function () {
+            document.addEventListener("mt-scale", function (e) {
+                var target = e.target;
+                if (target.matches('.mt-scaleable')) {
+                    if (!target.style.position) {
+                        target.style.position = "relative";
+                    }
+                    var currentTop = parseInt(target.style.top) || 0;
+                    var currentLeft = parseInt(target.style.left) || 0;
+                    var currentWidth = parseInt(target.style.width) || 0;
+                    var currentHeight = parseInt(target.style.height) || 0;
+                    target.style.top = (currentTop + e.detail.y) + "px";
+                    target.style.left = (currentLeft + e.detail.x) + "px";
+                    target.style.width = (currentWidth + e.detail.w) + "px";
+                    target.style.height = (currentHeight + e.detail.h) + "px";
+                }
+            });
         };
         return Manager;
     }());
@@ -248,11 +278,17 @@ var Multitouch;
         }
         EventWrapper.prototype.getEventPostion = function () {
             if (event instanceof TouchEvent) {
-                if (event.touches.item(this.index)) {
-                    return new Position(event.touches.item(this.index).pageX, event.touches.item(this.index).pageY);
+                for (var i = 0; i < event.touches.length; i++) {
+                    var touch = event.touches[i];
+                    if (touch.identifier == this.index) {
+                        return new Position(touch.pageX, touch.pageY);
+                    }
                 }
-                else if (event.changedTouches.item(this.index)) {
-                    return new Position(event.changedTouches.item(this.index).pageX, event.changedTouches.item(this.index).pageY);
+                for (var i = 0; i < event.changedTouches.length; i++) {
+                    var touch = event.changedTouches[i];
+                    if (touch.identifier == this.index) {
+                        return new Position(touch.pageX, touch.pageY);
+                    }
                 }
             }
             else if (event instanceof MouseEvent) {
@@ -265,4 +301,6 @@ var Multitouch;
 (function (d) {
     var mt = new Multitouch.Manager(d);
     mt.init();
+    mt.setupDragHandler();
+    mt.setupScaleHandler();
 })(document);

@@ -118,6 +118,8 @@ module Multitouch
             // It's just easier iterating over arrays
             let interactionsArr = Object.keys(interactions).map(function(key) { return interactions[key]; });
 
+            console.log(interactionsArr);
+
             if (interactionsArr.length > 0)
             {
                 for (let interaction of interactionsArr)
@@ -166,10 +168,10 @@ module Multitouch
                                     let wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff * -1));
                                     let hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff * -1));
 
-                                    let evt = new CustomEvent("scale");
-                                    evt.initCustomEvent("scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
+                                    let evt = new CustomEvent("mt-scale");
+                                    evt.initCustomEvent("mt-scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
                                     interaction.targetElm.dispatchEvent(evt);
-                                    console.log(`Scale event x=${xDiff} y=${yDiff} w=${wDiff} h=${hDiff}`);
+                                    //console.log(`Scale event x=${xDiff} y=${yDiff} w=${wDiff} h=${hDiff}`);
                                 }
 
                                 handled = true;
@@ -190,10 +192,10 @@ module Multitouch
                                     var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
 
                                     //let moveDragEvent = new Event("drag");
-                                    let evt = new CustomEvent("drag");
-                                    evt.initCustomEvent("drag", true, true, { "x" : xDiff, "y" : yDiff });
+                                    let evt = new CustomEvent("mt-drag");
+                                    evt.initCustomEvent("mt-drag", true, true, { "x" : xDiff, "y" : yDiff });
                                     interaction.targetElm.dispatchEvent(evt);
-                                    console.log(`Drag event x=${xDiff} y=${yDiff}`);
+                                    //console.log(`Drag event x=${xDiff} y=${yDiff}`);
                                 }
                             }
 
@@ -206,7 +208,7 @@ module Multitouch
                             {
                                 if (interaction.currentEvent.time - interaction.startEvent.time < 300)
                                 {
-                                    let previousPos = interaction.previousEvent.position;
+                                    let previousPos = interaction.startEvent.position;
                                     let currentPos = interaction.currentEvent.position;
 
                                     // We could easily use this x-y diff data to be able to 
@@ -226,7 +228,7 @@ module Multitouch
                                             interaction.targetElm.dataset["passclick"] = true.toString();
                                             interaction.targetElm.click();
 
-                                            console.log(`Click event!`);
+                                            //console.log(`Click event!`);
                                         }
                                     }
                                 }
@@ -248,6 +250,50 @@ module Multitouch
                     }
                 }
             }
+        }
+
+        public setupDragHandler()
+        {
+            document.addEventListener("mt-drag", function(e : CustomEvent) {
+                let target = <HTMLElement>e.target;
+
+                if (target.matches('.mt-draggable')) 
+                {
+                    if (!target.style.position) {
+                        target.style.position = "relative";
+                    }
+
+                    var currentTop = parseInt(target.style.top) || 0;
+                    var currentLeft = parseInt(target.style.left) || 0;
+
+                    target.style.top = (currentTop + e.detail.y) + "px";
+                    target.style.left = (currentLeft + e.detail.x) + "px";
+                }
+            });
+        }
+
+        public setupScaleHandler()
+        {
+            document.addEventListener("mt-scale", function(e : CustomEvent) {
+                let target = <HTMLElement>e.target;
+
+                if (target.matches('.mt-scaleable')) 
+                {
+                    if (!target.style.position) {
+                        target.style.position = "relative";
+                    }
+
+                    var currentTop = parseInt(target.style.top) || 0;
+                    var currentLeft = parseInt(target.style.left) || 0;
+                    var currentWidth = parseInt(target.style.width) || 0;
+                    var currentHeight = parseInt(target.style.height) || 0;
+
+                    target.style.top = (currentTop + e.detail.y) + "px";
+                    target.style.left = (currentLeft + e.detail.x) + "px";
+                    target.style.width = (currentWidth + e.detail.w) + "px";
+                    target.style.height = (currentHeight + e.detail.h) + "px";
+                }
+            });
         }
     }
 
@@ -341,19 +387,28 @@ module Multitouch
         {
             if (event instanceof TouchEvent)
             {
-                if ((<TouchEvent>event).touches.item(this.index))
+                for (let i = 0; i < (<TouchEvent>event).touches.length; i++)
                 {
-                    return new Position(
-                        (<TouchEvent>event).touches.item(this.index).pageX, 
-                        (<TouchEvent>event).touches.item(this.index).pageY
-                    );
+                    let touch : Touch = <Touch>(<TouchEvent>event).touches[i];
+
+                    if (touch.identifier == this.index) {
+                        return new Position(
+                            touch.pageX, 
+                            touch.pageY
+                        );
+                    }
                 }
-                else if ((<TouchEvent>event).changedTouches.item(this.index))
+
+                for (let i = 0; i < (<TouchEvent>event).changedTouches.length; i++)
                 {
-                    return new Position(
-                        (<TouchEvent>event).changedTouches.item(this.index).pageX, 
-                        (<TouchEvent>event).changedTouches.item(this.index).pageY
-                    );
+                    let touch : Touch = <Touch>(<TouchEvent>event).changedTouches[i];
+
+                    if (touch.identifier == this.index) {
+                        return new Position(
+                            touch.pageX, 
+                            touch.pageY
+                        );
+                    }
                 }
             }
             else if (event instanceof MouseEvent)
@@ -371,5 +426,7 @@ module Multitouch
 
     let mt = new Multitouch.Manager(d);
     mt.init();
+    mt.setupDragHandler();
+    mt.setupScaleHandler();
 
 })(document);

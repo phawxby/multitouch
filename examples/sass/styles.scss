@@ -2,7 +2,31 @@
 @import '../../src/multitouch';
 
 html {
-    
+    font-size: 16px;
+}
+
+@media (min-width: 1080px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 2000px) {
+    html {
+        font-size: 30px;
+    }
+}
+
+@media (min-width: 3000px) {
+    html {
+        font-size: 34px;
+    }
+}
+
+@media (min-width: 3800px) {
+    html {
+        font-size: 40px;
+    }
 }
 
 body {
@@ -13,8 +37,22 @@ body {
     display: inline-block;
     width: 6rem;
     height: 6rem; 
-    border: 1px solid #ccc;
+    border: 1px solid blue;
     padding: 1rem;
     margin-right: 1rem;
     margin-bottom: 1rem;
+    background-color: #fff;
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */
+    overflow: hidden;
+
+    &.mt-draggable {
+        border-color: red;
+    }
+
+    &.mt-scalable {
+        border-color: green;
+    }
 }
