@@ -5,7 +5,6 @@ module Multitouch
     }
 
     export class Manager {
-        private document : HTMLDocument;
         private interactions : Dictionary<Interaction> = {};
 
         public static generateGuid() : string
@@ -21,11 +20,8 @@ module Multitouch
             return uuid;
         }
 
-        constructor(_document : HTMLDocument) {
-            document = _document;
-        }
-
-        init() {
+        constructor(private document : HTMLDocument) {
+            
             document.addEventListener("touchstart", (evt) => { this.handleInteraction(evt); });
             document.addEventListener("touchend", (evt) => { this.handleInteraction(evt); });
             document.addEventListener("touchcancel", (evt) => { this.handleInteraction(evt); });
@@ -35,6 +31,9 @@ module Multitouch
             document.addEventListener("mouseup", (evt) => { this.handleInteraction(evt); });
             document.addEventListener("mousemove", (evt) => { this.handleInteraction(evt); });
             document.addEventListener("click", (evt) => { this.handleInteraction(evt); });
+
+            this.setupDragHandler();
+            this.setupScaleHandler();
         }
 
         private handleInteraction(evt : UIEvent) 
@@ -252,22 +251,13 @@ module Multitouch
             }
         }
 
-        public setupDragHandler()
-        {
-            document.addEventListener("mt-drag", function(e : CustomEvent) {
+        private setupDragHandler = () => {
+            this.document.addEventListener("mt-drag", (e : CustomEvent) => {
                 let target = <HTMLElement>e.target;
 
                 if (target.matches('.mt-draggable')) 
                 {
-                    let dragTarget = target;
-                    let foundTarget = false;
-                    while (!(foundTarget = dragTarget.matches(".mt-draggable-target")) && dragTarget.parentElement !== null) {
-                        dragTarget = dragTarget.parentElement;
-                    }
-                    if (!foundTarget) {
-                        dragTarget = target;
-                    }
-
+                    let dragTarget = this.closestParent(target, ".mt-draggable-target") || target;
                     let compStyle;
                     if (!dragTarget.style.position && !(compStyle = window.getComputedStyle(dragTarget)).position) {
                         dragTarget.style.position = "relative";
@@ -281,22 +271,14 @@ module Multitouch
             });
         }
 
-        public setupScaleHandler()
-        {
-            document.addEventListener("mt-scale", function(e : CustomEvent) {
+        private setupScaleHandler = () => {
+            this.document.addEventListener("mt-scale", (e : CustomEvent) => {
                 let target = <HTMLElement>e.target;
 
                 if (target.matches('.mt-scaleable')) 
                 {
 
-                    let scaleTarget = target;
-                    let foundTarget = false;
-                    while (!(foundTarget = scaleTarget.matches(".mt-draggable-target")) && scaleTarget.parentElement !== null) {
-                        scaleTarget = scaleTarget.parentElement;
-                    }
-                    if (!foundTarget) {
-                        scaleTarget = target;
-                    }
+                    let scaleTarget = this.closestParent(target, ".mt-scaleable-target") || target;
 
                     if (!scaleTarget.style.position) {
                         scaleTarget.style.position = "relative";
@@ -313,7 +295,20 @@ module Multitouch
                     scaleTarget.style.height = (currentHeight + e.detail.h) + "px";
                 }
             });
-        }
+        };
+
+        private closestParent = (element: HTMLElement, selector: string): HTMLElement => {
+            let target = element, 
+                foundTarget = false;
+
+            while (!(foundTarget = target.matches(selector)) && target.parentElement !== null) {
+                target = target.parentElement;
+            }
+
+            if (foundTarget) {
+                return target;
+            }
+        };
     }
 
     class Interaction

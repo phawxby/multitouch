@@ -1,9 +1,64 @@
 var Multitouch;
 (function (Multitouch) {
     var Manager = (function () {
-        function Manager(_document) {
+        function Manager(document) {
+            var _this = this;
+            this.document = document;
             this.interactions = {};
-            document = _document;
+            this.setupDragHandler = function () {
+                _this.document.addEventListener("mt-drag", function (e) {
+                    var target = e.target;
+                    if (target.matches('.mt-draggable')) {
+                        var dragTarget = _this.closestParent(target, ".mt-draggable-target") || target;
+                        var compStyle = void 0;
+                        if (!dragTarget.style.position && !(compStyle = window.getComputedStyle(dragTarget)).position) {
+                            dragTarget.style.position = "relative";
+                        }
+                        var currentTop = parseInt(dragTarget.style.top || compStyle.top) || 0;
+                        var currentLeft = parseInt(dragTarget.style.left || compStyle.left) || 0;
+                        dragTarget.style.top = (currentTop + e.detail.y) + "px";
+                        dragTarget.style.left = (currentLeft + e.detail.x) + "px";
+                    }
+                });
+            };
+            this.setupScaleHandler = function () {
+                _this.document.addEventListener("mt-scale", function (e) {
+                    var target = e.target;
+                    if (target.matches('.mt-scaleable')) {
+                        var scaleTarget = _this.closestParent(target, ".mt-scaleable-target") || target;
+                        if (!scaleTarget.style.position) {
+                            scaleTarget.style.position = "relative";
+                        }
+                        var currentTop = parseInt(scaleTarget.style.top) || 0;
+                        var currentLeft = parseInt(scaleTarget.style.left) || 0;
+                        var currentWidth = parseInt(scaleTarget.style.width) || 0;
+                        var currentHeight = parseInt(scaleTarget.style.height) || 0;
+                        scaleTarget.style.top = (currentTop + e.detail.y) + "px";
+                        scaleTarget.style.left = (currentLeft + e.detail.x) + "px";
+                        scaleTarget.style.width = (currentWidth + e.detail.w) + "px";
+                        scaleTarget.style.height = (currentHeight + e.detail.h) + "px";
+                    }
+                });
+            };
+            this.closestParent = function (element, selector) {
+                var target = element, foundTarget = false;
+                while (!(foundTarget = target.matches(selector)) && target.parentElement !== null) {
+                    target = target.parentElement;
+                }
+                if (foundTarget) {
+                    return target;
+                }
+            };
+            document.addEventListener("touchstart", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("touchend", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("touchcancel", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("touchmove", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("mousedown", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("mouseup", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("mousemove", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("click", function (evt) { _this.handleInteraction(evt); });
+            this.setupDragHandler();
+            this.setupScaleHandler();
         }
         Manager.generateGuid = function () {
             // http://stackoverflow.com/a/8809472
@@ -14,17 +69,6 @@ var Multitouch;
                 return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
             });
             return uuid;
-        };
-        Manager.prototype.init = function () {
-            var _this = this;
-            document.addEventListener("touchstart", function (evt) { _this.handleInteraction(evt); });
-            document.addEventListener("touchend", function (evt) { _this.handleInteraction(evt); });
-            document.addEventListener("touchcancel", function (evt) { _this.handleInteraction(evt); });
-            document.addEventListener("touchmove", function (evt) { _this.handleInteraction(evt); });
-            document.addEventListener("mousedown", function (evt) { _this.handleInteraction(evt); });
-            document.addEventListener("mouseup", function (evt) { _this.handleInteraction(evt); });
-            document.addEventListener("mousemove", function (evt) { _this.handleInteraction(evt); });
-            document.addEventListener("click", function (evt) { _this.handleInteraction(evt); });
         };
         Manager.prototype.handleInteraction = function (evt) {
             if (evt instanceof TouchEvent) {
@@ -181,55 +225,6 @@ var Multitouch;
                     }
                 }
             }
-        };
-        Manager.prototype.setupDragHandler = function () {
-            document.addEventListener("mt-drag", function (e) {
-                var target = e.target;
-                if (target.matches('.mt-draggable')) {
-                    var dragTarget = target;
-                    var foundTarget = false;
-                    while (!(foundTarget = dragTarget.matches(".mt-draggable-target")) && dragTarget.parentElement !== null) {
-                        dragTarget = dragTarget.parentElement;
-                    }
-                    if (!foundTarget) {
-                        dragTarget = target;
-                    }
-                    var compStyle = void 0;
-                    if (!dragTarget.style.position && !(compStyle = window.getComputedStyle(dragTarget)).position) {
-                        dragTarget.style.position = "relative";
-                    }
-                    var currentTop = parseInt(dragTarget.style.top || compStyle.top) || 0;
-                    var currentLeft = parseInt(dragTarget.style.left || compStyle.left) || 0;
-                    dragTarget.style.top = (currentTop + e.detail.y) + "px";
-                    dragTarget.style.left = (currentLeft + e.detail.x) + "px";
-                }
-            });
-        };
-        Manager.prototype.setupScaleHandler = function () {
-            document.addEventListener("mt-scale", function (e) {
-                var target = e.target;
-                if (target.matches('.mt-scaleable')) {
-                    var scaleTarget = target;
-                    var foundTarget = false;
-                    while (!(foundTarget = scaleTarget.matches(".mt-draggable-target")) && scaleTarget.parentElement !== null) {
-                        scaleTarget = scaleTarget.parentElement;
-                    }
-                    if (!foundTarget) {
-                        scaleTarget = target;
-                    }
-                    if (!scaleTarget.style.position) {
-                        scaleTarget.style.position = "relative";
-                    }
-                    var currentTop = parseInt(scaleTarget.style.top) || 0;
-                    var currentLeft = parseInt(scaleTarget.style.left) || 0;
-                    var currentWidth = parseInt(scaleTarget.style.width) || 0;
-                    var currentHeight = parseInt(scaleTarget.style.height) || 0;
-                    scaleTarget.style.top = (currentTop + e.detail.y) + "px";
-                    scaleTarget.style.left = (currentLeft + e.detail.x) + "px";
-                    scaleTarget.style.width = (currentWidth + e.detail.w) + "px";
-                    scaleTarget.style.height = (currentHeight + e.detail.h) + "px";
-                }
-            });
         };
         return Manager;
     }());
