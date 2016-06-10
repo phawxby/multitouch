@@ -186,13 +186,22 @@ var Multitouch;
             document.addEventListener("mt-drag", function (e) {
                 var target = e.target;
                 if (target.matches('.mt-draggable')) {
-                    if (!target.style.position) {
-                        target.style.position = "relative";
+                    var dragTarget = target;
+                    var foundTarget = false;
+                    while (!(foundTarget = dragTarget.matches(".mt-draggable-target")) && dragTarget.parentElement !== null) {
+                        dragTarget = dragTarget.parentElement;
                     }
-                    var currentTop = parseInt(target.style.top) || 0;
-                    var currentLeft = parseInt(target.style.left) || 0;
-                    target.style.top = (currentTop + e.detail.y) + "px";
-                    target.style.left = (currentLeft + e.detail.x) + "px";
+                    if (!foundTarget) {
+                        dragTarget = target;
+                    }
+                    var compStyle = void 0;
+                    if (!dragTarget.style.position && !(compStyle = window.getComputedStyle(dragTarget)).position) {
+                        dragTarget.style.position = "relative";
+                    }
+                    var currentTop = parseInt(dragTarget.style.top || compStyle.top) || 0;
+                    var currentLeft = parseInt(dragTarget.style.left || compStyle.left) || 0;
+                    dragTarget.style.top = (currentTop + e.detail.y) + "px";
+                    dragTarget.style.left = (currentLeft + e.detail.x) + "px";
                 }
             });
         };
@@ -200,17 +209,25 @@ var Multitouch;
             document.addEventListener("mt-scale", function (e) {
                 var target = e.target;
                 if (target.matches('.mt-scaleable')) {
-                    if (!target.style.position) {
-                        target.style.position = "relative";
+                    var scaleTarget = target;
+                    var foundTarget = false;
+                    while (!(foundTarget = scaleTarget.matches(".mt-draggable-target")) && scaleTarget.parentElement !== null) {
+                        scaleTarget = scaleTarget.parentElement;
                     }
-                    var currentTop = parseInt(target.style.top) || 0;
-                    var currentLeft = parseInt(target.style.left) || 0;
-                    var currentWidth = parseInt(target.style.width) || 0;
-                    var currentHeight = parseInt(target.style.height) || 0;
-                    target.style.top = (currentTop + e.detail.y) + "px";
-                    target.style.left = (currentLeft + e.detail.x) + "px";
-                    target.style.width = (currentWidth + e.detail.w) + "px";
-                    target.style.height = (currentHeight + e.detail.h) + "px";
+                    if (!foundTarget) {
+                        scaleTarget = target;
+                    }
+                    if (!scaleTarget.style.position) {
+                        scaleTarget.style.position = "relative";
+                    }
+                    var currentTop = parseInt(scaleTarget.style.top) || 0;
+                    var currentLeft = parseInt(scaleTarget.style.left) || 0;
+                    var currentWidth = parseInt(scaleTarget.style.width) || 0;
+                    var currentHeight = parseInt(scaleTarget.style.height) || 0;
+                    scaleTarget.style.top = (currentTop + e.detail.y) + "px";
+                    scaleTarget.style.left = (currentLeft + e.detail.x) + "px";
+                    scaleTarget.style.width = (currentWidth + e.detail.w) + "px";
+                    scaleTarget.style.height = (currentHeight + e.detail.h) + "px";
                 }
             });
         };
