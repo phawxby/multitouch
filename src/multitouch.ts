@@ -69,6 +69,12 @@ module Multitouch
             {
                 let id = "mouse";
                 let target = <HTMLElement>evt.target;
+                
+                if (evt.type.indexOf("click") >= 0) {
+                    evt.stopImmediatePropagation();
+                    evt.preventDefault();
+                    return;
+                }
 
                 if (target.dataset["touch"] === true.toString()) {
                     if (evt.type.indexOf("up") >= 0) {
@@ -126,28 +132,55 @@ module Multitouch
                         if (matchingScaleInteraction)
                         {
                             // Logic here to emit scaling events based on the movement of the two interaction points
+                            // The plan is to get the left/top most point and based on their previous event set the x/y
+                            // position change (See the drag event below)
+                            // Then get the right/bottom most point and based on their previous event set the width/height 
+                            // change
+                            // Emiting based on change allows us to be very relative with our data and it would work for relative or absolute
+                            // elements
 
-                            console.log("Scale event");
+                            let previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
+                            let currentPosA = interaction.currentEvent.position;
+                            let previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
+                            let currentPosB = matchingScaleInteraction.currentEvent.position;
+
+                            if (previousPosA && currentPosA && previousPosB && currentPosB)
+                            {
+                                let xDiffA = currentPosA.pageX - previousPosA.pageX;
+                                let yDiffA = currentPosA.pageY - previousPosA.pageY;
+                                let xDiffB = currentPosB.pageX - previousPosB.pageX;
+                                let yDiffB = currentPosB.pageY - previousPosB.pageY;
+
+                                let xDiff = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
+                                let yDiff = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
+                                let wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff * -1));
+                                let hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff * -1));
+
+                                console.log(`Scale event x=${xDiff} y=${yDiff} w=${wDiff} h=${hDiff}`);
+                            }
 
                             handled = true;
                         }
                     }
 
-                    if (!handled && interaction.closestDragElm && interaction.previousEvent && interaction.currentEvent && !interaction.ending)
+                    if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending)
                     {
-                        var previousPos = interaction.previousEvent.position;
-                        var currentPos = interaction.currentEvent.position;
-
-                        if (previousPos && currentPos)
+                        if (interaction.previousEvent)
                         {
-                            var xDiff = currentPos.pageX - previousPos.pageX;
-                            var yDiff = currentPos.pageY - previousPos.pageY;
+                            let previousPos = interaction.previousEvent.position;
+                            let currentPos = interaction.currentEvent.position;
 
-                            //let moveDragEvent = new Event("drag");
-                            console.log(`Drag event x=${xDiff} y=${yDiff}`);
+                            if (previousPos && currentPos)
+                            {
+                                var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
+                                var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
 
-                            handled = true;
+                                //let moveDragEvent = new Event("drag");
+                                console.log(`Drag event x=${xDiff} y=${yDiff}`);
+                            }
                         }
+
+                        handled = true;
                     }
 
                     if (!handled && interaction.targetElm)
@@ -156,14 +189,16 @@ module Multitouch
                         {
                             if (interaction.currentEvent.time - interaction.startEvent.time < 300)
                             {
-                                var previousPos = interaction.previousEvent.position;
-                                var currentPos = interaction.currentEvent.position;
+                                let previousPos = interaction.previousEvent.position;
+                                let currentPos = interaction.currentEvent.position;
 
+                                // We could easily use this x-y diff data to be able to 
+                                // emit swipe events and what not too
                                 if (previousPos && currentPos)
                                 {
-                                    var xDiff = currentPos.pageX - previousPos.pageX;
+                                    let xDiff = currentPos.pageX - previousPos.pageX;
                                     xDiff = xDiff < 0 ? xDiff * -1 : 0;
-                                    var yDiff = currentPos.pageY - previousPos.pageY;
+                                    let yDiff = currentPos.pageY - previousPos.pageY;
                                     yDiff = yDiff < 0 ? yDiff * -1 : 0;
 
                                     if (xDiff < 30 && yDiff < 30)
@@ -175,13 +210,17 @@ module Multitouch
                         }
                     }
 
+                    if (handled)
+                    {
+                        interaction.currentEvent.event.preventDefault();
+                        interaction.currentEvent.event.stopImmediatePropagation();
+
+                        this.interactions[interaction.key].updated = false;
+                    }
+
                     if (interaction.ending)
                     {
                         delete this.interactions[interaction.key];
-                    }
-                    else if (handled)
-                    {
-                        this.interactions[interaction.key].updated = false;
                     }
                 }
             }
@@ -197,7 +236,7 @@ module Multitouch
         public previousEvent : EventWrapper;
 
         public ending : Boolean = false;
-        public updated : Boolean = false;
+        public updated : Boolean = true;
 
         public targetElm : HTMLElement;
         public closestDragElm : HTMLElement;
