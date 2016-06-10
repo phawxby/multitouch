@@ -240,12 +240,11 @@ var Multitouch;
     }());
     Multitouch.Manager = Manager;
     var Interaction = (function () {
-        function Interaction(_key, _index, _event) {
-            this.index = 0;
+        function Interaction(key, index, _event) {
+            this.key = key;
+            this.index = index;
             this.ending = false;
             this.updated = true;
-            this.key = _key;
-            this.index = _index;
             this.startEvent = new EventWrapper(_event, this.index);
             this.currentEvent = new EventWrapper(_event, this.index);
             this.targetElm = this.startEvent.event.target;
@@ -282,20 +281,11 @@ var Multitouch;
         };
         return Interaction;
     }());
-    var Position = (function () {
-        function Position(_pageX, _pageY) {
-            this.pageX = _pageX;
-            this.pageY = _pageY;
-        }
-        return Position;
-    }());
-    Multitouch.Position = Position;
     var EventWrapper = (function () {
-        function EventWrapper(_event, _index) {
-            this.index = 0;
+        function EventWrapper(event, index) {
+            this.event = event;
+            this.index = index;
             this.time = performance.now();
-            this.event = _event;
-            this.index = _index;
             this.position = this.getEventPostion();
         }
         EventWrapper.prototype.getEventPostion = function () {
@@ -303,18 +293,27 @@ var Multitouch;
                 for (var i = 0; i < event.touches.length; i++) {
                     var touch = event.touches[i];
                     if (touch.identifier == this.index) {
-                        return new Position(touch.pageX, touch.pageY);
+                        return {
+                            pageX: touch.pageX,
+                            pageY: touch.pageY
+                        };
                     }
                 }
                 for (var i = 0; i < event.changedTouches.length; i++) {
                     var touch = event.changedTouches[i];
                     if (touch.identifier == this.index) {
-                        return new Position(touch.pageX, touch.pageY);
+                        return {
+                            pageX: touch.pageX,
+                            pageY: touch.pageY
+                        };
                     }
                 }
             }
             else if (event instanceof MouseEvent) {
-                return new Position(event.pageX, event.pageY);
+                return {
+                    pageX: event.pageX,
+                    pageY: event.pageY
+                };
             }
         };
         return EventWrapper;

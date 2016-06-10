@@ -319,22 +319,18 @@ module Multitouch
 
     class Interaction
     {
-        public key : string;
-        public index : number = 0;
-        public startEvent : EventWrapper;
-        public currentEvent : EventWrapper;
-        public previousEvent : EventWrapper;
+        public startEvent: EventWrapper;
+        public currentEvent: EventWrapper;
+        public previousEvent: EventWrapper;
 
-        public ending : Boolean = false;
-        public updated : Boolean = true;
+        public ending = false;
+        public updated = true
 
-        public targetElm : HTMLElement;
-        public closestDragElm : HTMLElement;
-        public closestScaleElm : HTMLElement;
+        public targetElm: HTMLElement;
+        public closestDragElm: HTMLElement;
+        public closestScaleElm: HTMLElement;
 
-        constructor(_key : string, _index : number, _event : UIEvent) {
-            this.key = _key;
-            this.index = _index;
+        constructor(public key: string, public index: number, _event: UIEvent) {
             this.startEvent = new EventWrapper(_event, this.index);
             this.currentEvent = new EventWrapper(_event, this.index);
 
@@ -378,65 +374,56 @@ module Multitouch
         }
     }
 
-    export class Position
+    export interface IPosition
     {
-        public pageX : number;
-        public pageY : number;
-
-        constructor(_pageX : number, _pageY : number) {
-            this.pageX = _pageX;
-            this.pageY = _pageY;
-        }
+        pageX : number;
+        pageY : number;
     }
 
     class EventWrapper
     {
         public time : number;
-        public event : UIEvent;
-        public index : number = 0;
-        public position : Position;
+        public position : IPosition;
 
-        constructor(_event : UIEvent, _index : number) {
+        constructor(public event : UIEvent, public index : number) {
             this.time = performance.now();
-            this.event = _event;
-            this.index = _index;
             this.position = this.getEventPostion();
         }
 
-        private getEventPostion() : Position
+        private getEventPostion() : IPosition
         {
             if (event instanceof TouchEvent)
             {
-                for (let i = 0; i < (<TouchEvent>event).touches.length; i++)
+                for (let i = 0; i < event.touches.length; i++)
                 {
-                    let touch : Touch = <Touch>(<TouchEvent>event).touches[i];
+                    let touch = event.touches[i];
 
                     if (touch.identifier == this.index) {
-                        return new Position(
-                            touch.pageX, 
-                            touch.pageY
-                        );
+                        return {
+                            pageX: touch.pageX, 
+                            pageY: touch.pageY
+                        };
                     }
                 }
 
-                for (let i = 0; i < (<TouchEvent>event).changedTouches.length; i++)
+                for (let i = 0; i < event.changedTouches.length; i++)
                 {
-                    let touch : Touch = <Touch>(<TouchEvent>event).changedTouches[i];
+                    let touch = event.changedTouches[i];
 
                     if (touch.identifier == this.index) {
-                        return new Position(
-                            touch.pageX, 
-                            touch.pageY
-                        );
+                        return {
+                            pageX: touch.pageX, 
+                            pageY: touch.pageY
+                        };
                     }
                 }
             }
             else if (event instanceof MouseEvent)
             {
-                return new Position(
-                    (<MouseEvent>event).pageX, 
-                    (<MouseEvent>event).pageY
-                );
+                return {
+                    pageX: event.pageX, 
+                    pageY: event.pageY
+                };
             }
         }
     }
