@@ -36,8 +36,7 @@ module Multitouch
             this.setupScaleHandler();
         }
 
-        private handleInteraction(evt : UIEvent) 
-        {
+        private handleInteraction = (evt : UIEvent) => {
             if (evt instanceof TouchEvent)
             {
                 for (let i = 0; i < evt.changedTouches.length; i++)
@@ -111,8 +110,7 @@ module Multitouch
             this.coalesceInteractions();
         }
 
-        private coalesceInteractions()
-        {
+        private coalesceInteractions = () => {
             let interactions = this.interactions;
             // It's just easier iterating over arrays
             let interactionsArr = Object.keys(interactions).map(function(key) { return interactions[key]; });
