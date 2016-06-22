@@ -11,8 +11,6 @@
   height: 6rem;
   border: 1px solid blue;
   padding: 1rem;
-  margin-right: 1rem;
-  margin-bottom: 1rem;
   background-color: #fff;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -27,4 +25,26 @@
 }
 .block.mt-scalable {
   border-color: green; 
+}
+
+.window {
+  display: inline-block;
+  width: 30vw;
+  border: 1px solid #ddd;
+  
+  background-color: #fff;
+  overflow: hidden; 
+}
+
+.window > div {
+  padding: 1rem;
+}
+
+.window > div.mt-draggable {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+  cursor: move;
+  background-color: #aaa;
 }

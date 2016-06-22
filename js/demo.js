@@ -13,7 +13,7 @@ document.addEventListener("click", function(e) {
     }
 });
 
-let blocks = document.getElementsByClassName("block");
+let blocks = document.querySelectorAll(".block,.window");
 for (let i = 0; i < blocks.length; i++)
 {
   let block = blocks[i];
