@@ -9,7 +9,7 @@ http://phawxby.github.io/multitouchjs/
 ## To-do
 * Add containers to prevent elements being dragged and scaled beyond bounds
 * Add a way to differentiate between scale and resize
-* * Layering so active elements are pulled to the front
+* Layering so active elements are pulled to the front
 * Make handling of events optional so developers can override if they wish
 * Add gesture events similar to hammerjs but for multiple touchpoints at once
 * Refactoring, lots and lots of refactoring
