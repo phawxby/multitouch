@@ -9,6 +9,7 @@
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-live-server": "0.0.29",
+    "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.3.1",
     "gulp-typescript": "^2.13.5",
     "gulp-uglify": "^1.5.3",
