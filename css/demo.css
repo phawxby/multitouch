@@ -1,0 +1,30 @@
+.demo-area {
+  height: 400px;
+  border: 1px solid #eee;
+  position: relative;
+  overflow: hidden;
+}
+
+.block {
+  display: inline-block;
+  width: 6rem;
+  height: 6rem;
+  border: 1px solid blue;
+  padding: 1rem;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fff;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+  overflow: hidden; 
+  cursor: pointer;
+}
+
+.block.mt-draggable {
+  border-color: red; 
+}
+.block.mt-scalable {
+  border-color: green; 
+}

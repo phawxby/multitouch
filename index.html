@@ -4,10 +4,22 @@
     <meta charset="UTF-8">
     <title>Multitouchjs by phawxby</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1,user-scalable=no">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/demo.css" media="screen">
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-4734549-9', 'auto');
+      ga('send', 'pageview');
+    </script>
+
   </head>
   <body>
     <section class="page-header">
@@ -19,10 +31,61 @@
     </section>
 
     <section class="main-content">
-      <h1>
-<a id="multitouchjs" class="anchor" href="#multitouchjs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>multitouchjs</h1>
+      <h1><a id="multitouchjs" class="anchor" href="#multitouchjs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Multitouchjs</h1>
 
-<p>Multitouchjs overrides standard touch interactions and allows for proper multitouch interaction within websites. 0 dependencies (other than a decent browsers)</p>
+      <p>Multitouchjs overrides standard touch interactions and allows for proper multitouch interaction within websites. 0 dependencies (other than a decent browsers)</p>
+
+      <h2><a id="demo" class="anchor" href="#demo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Demo</h2>
+
+      <div class="demo-area">
+        <div class="block">
+          Touch me
+        </div>
+        
+        <div class="block">
+          Touch me
+        </div>
+        
+        <div class="block">
+          Touch me
+        </div>
+
+        <div class="block mt-draggable">
+          Drag me
+        </div>
+
+        <div class="block mt-scaleable mt-draggable">
+          Scale or drag me
+        </div>
+
+        <div class="block">
+          Touch me
+        </div>
+
+        <div class="block">
+          Touch me
+        </div>
+
+        <div class="block">
+          Touch me
+        </div>
+
+        <div class="block">
+          Touch me
+        </div>
+
+        <div class="block mt-draggable">
+          Drag me
+        </div>
+
+        <div class="block mt-draggable">
+          Drag me
+        </div>
+
+        <div class="block mt-draggable">
+          Drag me
+        </div>
+      </div>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/phawxby/multitouchjs">Multitouchjs</a> is maintained by <a href="https://github.com/phawxby">phawxby</a>.</span>
@@ -32,6 +95,7 @@
 
     </section>
 
-  
+    <script defer async src="js/multitouch.js"></script>
+	  <script defer async src="js/demo.js"></script>
   </body>
 </html>
