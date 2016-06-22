@@ -1,1 +1,322 @@
-var Multitouch;!function(t){var e=function(){function t(t){var e=this;this.document=t,this.interactions={},this.setupDragHandler=function(){e.document.addEventListener("mt-drag",function(t){var n=t.target;if(n.matches(".mt-draggable")){var i=e.closestParent(n,".mt-draggable-target")||n,a=e.getStyleValues(i);a.isPositioned||(i.style.position="relative"),i.style.top=a.top+t.detail.y+"px",i.style.left=a.left+t.detail.x+"px"}})},this.setupScaleHandler=function(){e.document.addEventListener("mt-scale",function(t){var n=t.target;if(n.matches(".mt-scaleable")){var i=e.closestParent(n,".mt-scaleable-target")||n,a=e.getStyleValues(i);a.isPositioned||(i.style.position="relative"),i.style.top=a.top+t.detail.y+"px",i.style.left=a.left+t.detail.x+"px",i.style.width=a.width+t.detail.w+"px",i.style.height=a.height+t.detail.h+"px"}})},this.getStyleValues=function(t){var e;return{isPositioned:!(!t.style.position&&!(e=window.getComputedStyle(t)).position),top:parseInt(t.style.top||(e||(e=window.getComputedStyle(t))).top)||0,left:parseInt(t.style.left||(e||(e=window.getComputedStyle(t))).left)||0,width:parseInt(t.style.width||(e||(e=window.getComputedStyle(t))).width)||0,height:parseInt(t.style.height||(e||(e=window.getComputedStyle(t))).height)||0}},this.closestParent=function(t,e){for(var n=t,i=!1;!(i=n.matches(e))&&null!==n.parentElement;)n=n.parentElement;return i?n:void 0},t.addEventListener("touchstart",function(t){e.handleInteraction(t)}),t.addEventListener("touchend",function(t){e.handleInteraction(t)}),t.addEventListener("touchcancel",function(t){e.handleInteraction(t)}),t.addEventListener("touchmove",function(t){e.handleInteraction(t)}),t.addEventListener("mousedown",function(t){e.handleInteraction(t)}),t.addEventListener("mouseup",function(t){e.handleInteraction(t)}),t.addEventListener("mousemove",function(t){e.handleInteraction(t)}),t.addEventListener("click",function(t){e.handleInteraction(t)}),this.setupDragHandler(),this.setupScaleHandler()}return t.generateGuid=function(){var t=performance.now(),e="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(e){var n=(t+16*Math.random())%16|0;return t=Math.floor(t/16),("x"==e?n:3&n|8).toString(16)});return e},t.prototype.handleInteraction=function(t){if(t instanceof TouchEvent)for(var e=0;e<t.changedTouches.length;e++){var i=t.changedTouches[e],a="touch-"+i.identifier,s=t.target;s.dataset.touch=(!0).toString();var r=this.interactions[a];t.type.indexOf("start")>=0?this.interactions[a]=new n(a,i.identifier,t):t.type.indexOf("cancel")>=0?this.interactions[a]=null:r&&r.update(t),r&&(r.ending=t.type.indexOf("end")>0,this.interactions[a]=r)}else if(t instanceof MouseEvent){var o="mouse",s=t.target;if(t.type.indexOf("click")>=0)return s.dataset.passclick===(!0).toString()?void(s.dataset.passclick=(!1).toString()):(t.stopImmediatePropagation(),void t.preventDefault());if(s.dataset.touch===(!0).toString())return t.type.indexOf("up")>=0&&(s.dataset.touch=(!1).toString()),t.stopImmediatePropagation(),void t.preventDefault();var r=this.interactions[o];t.type.indexOf("down")>=0?this.interactions[o]=new n(o,0,t):r&&r.update(t),r&&(r.ending=t.type.indexOf("up")>=0,this.interactions[o]=r)}this.coalesceInteractions()},t.prototype.coalesceInteractions=function(){var t=this.interactions,e=Object.keys(t).map(function(e){return t[e]});if(console.log(e),e.length>0)for(var n=0,i=e;n<i.length;n++){var a=i[n];if(a.updated){var s=!1;if(!s&&a.closestScaleElm){for(var r=void 0,o=0,l=e;o<l.length;o++){var c=l[o];if(a!=c&&c.closestScaleElm==a.closestScaleElm){r=c;break}}if(r){var d=a.previousEvent?a.previousEvent.position:a.currentEvent.position,u=a.currentEvent.position,h=r.previousEvent?r.previousEvent.position:r.currentEvent.position,p=r.currentEvent.position;if(d&&u&&h&&p){var g=u.pageX-d.pageX,v=u.pageY-d.pageY,f=p.pageX-h.pageX,m=p.pageY-h.pageY,E=Math.ceil(u.pageX<p.pageX?g:f),x=Math.ceil(u.pageY<p.pageY?v:m),y=Math.ceil((u.pageX<p.pageX?f:g)+-1*E),w=Math.ceil((u.pageY<p.pageY?m:v)+-1*x),S=new CustomEvent("mt-scale");S.initCustomEvent("mt-scale",!0,!0,{x:E,y:x,w:y,h:w}),a.targetElm.dispatchEvent(S)}s=!0}}if(!s&&a.closestDragElm&&a.currentEvent&&!a.ending){if(a.previousEvent){var I=a.previousEvent.position,M=a.currentEvent.position;if(I&&M){var X=Math.ceil(M.pageX-I.pageX),Y=Math.ceil(M.pageY-I.pageY),S=new CustomEvent("mt-drag");S.initCustomEvent("mt-drag",!0,!0,{x:X,y:Y}),a.targetElm.dispatchEvent(S)}}s=!0}if(!s&&a.targetElm&&a.startEvent&&a.currentEvent&&a.ending&&a.currentEvent.time-a.startEvent.time<300){var I=a.startEvent.position,M=a.currentEvent.position;if(I&&M){var L=M.pageX-I.pageX;L=0>L?-1*L:0;var D=M.pageY-I.pageY;D=0>D?-1*D:0,30>L&&30>D&&(s=!0,a.targetElm.dataset.passclick=(!0).toString(),a.targetElm.click())}}s&&(a.currentEvent.event.preventDefault(),a.currentEvent.event.stopImmediatePropagation(),this.interactions[a.key].updated=!1),a.ending&&delete this.interactions[a.key]}}},t}();t.Manager=e;var n=function(){function e(e,n,a){this.key=e,this.index=n,this.ending=!1,this.updated=!0,this.startEvent=new i(a,this.index),this.currentEvent=new i(a,this.index),this.targetElm=this.startEvent.event.target,!this.closestDragElm&&this.targetElm.classList.contains("mt-draggable")&&(this.closestDragElm=this.targetElm),!this.closestScaleElm&&this.targetElm.classList.contains("mt-scaleable")&&(this.closestScaleElm=this.targetElm);for(var s=this.targetElm.parentElement;null!=s;)!this.closestDragElm&&s.classList.contains("mt-draggable")&&(this.closestDragElm=s),!this.closestScaleElm&&s.classList.contains("mt-scaleable")&&(this.closestScaleElm=s),s=s.parentElement;this.targetElm&&!this.targetElm.dataset.uniqueId&&(this.targetElm.dataset.uniqueId=t.Manager.generateGuid()),this.closestDragElm&&!this.closestDragElm.dataset.uniqueId&&(this.closestDragElm.dataset.uniqueId=t.Manager.generateGuid()),this.closestScaleElm&&!this.closestScaleElm.dataset.uniqueId&&(this.closestScaleElm.dataset.uniqueId=t.Manager.generateGuid())}return e.prototype.update=function(t){this.previousEvent=this.currentEvent,this.currentEvent=new i(t,this.index),this.updated=!0},e}(),i=function(){function t(t,e){this.event=t,this.index=e,this.time=performance.now(),this.position=this.getEventPostion()}return t.prototype.getEventPostion=function(){if(event instanceof TouchEvent){for(var t=0;t<event.touches.length;t++){var e=event.touches[t];if(e.identifier==this.index)return{pageX:e.pageX,pageY:e.pageY}}for(var t=0;t<event.changedTouches.length;t++){var e=event.changedTouches[t];if(e.identifier==this.index)return{pageX:e.pageX,pageY:e.pageY}}}else if(event instanceof MouseEvent)return{pageX:event.pageX,pageY:event.pageY}},t}()}(Multitouch||(Multitouch={})),function(t){new Multitouch.Manager(t)}(document);
+var Multitouch;
+(function (Multitouch) {
+    var Manager = (function () {
+        function Manager(document) {
+            var _this = this;
+            this.document = document;
+            this.interactions = {};
+            this.setupDragHandler = function () {
+                _this.document.addEventListener("mt-drag", function (e) {
+                    var target = e.target;
+                    if (target.matches('.mt-draggable')) {
+                        var dragTarget = _this.closestParent(target, ".mt-draggable-target") || target;
+                        var styleVals = _this.getStyleValues(dragTarget);
+                        if (!styleVals.isPositioned) {
+                            dragTarget.style.position = "relative";
+                        }
+                        dragTarget.style.top = (styleVals.top + e.detail.y) + "px";
+                        dragTarget.style.left = (styleVals.left + e.detail.x) + "px";
+                    }
+                });
+            };
+            this.setupScaleHandler = function () {
+                _this.document.addEventListener("mt-scale", function (e) {
+                    var target = e.target;
+                    if (target.matches('.mt-scaleable')) {
+                        var scaleTarget = _this.closestParent(target, ".mt-scaleable-target") || target;
+                        var styleVals = _this.getStyleValues(scaleTarget);
+                        if (!styleVals.isPositioned) {
+                            scaleTarget.style.position = "relative";
+                        }
+                        scaleTarget.style.top = (styleVals.top + e.detail.y) + "px";
+                        scaleTarget.style.left = (styleVals.left + e.detail.x) + "px";
+                        scaleTarget.style.width = (styleVals.width + e.detail.w) + "px";
+                        scaleTarget.style.height = (styleVals.height + e.detail.h) + "px";
+                    }
+                });
+            };
+            /**
+             * Gets the current style values required for positioning and scaling an element.
+             */
+            this.getStyleValues = function (target) {
+                var compStyle;
+                return {
+                    isPositioned: !(!target.style.position && !(compStyle = window.getComputedStyle(target)).position),
+                    top: parseInt(target.style.top || (compStyle || (compStyle = window.getComputedStyle(target))).top) || 0,
+                    left: parseInt(target.style.left || (compStyle || (compStyle = window.getComputedStyle(target))).left) || 0,
+                    width: parseInt(target.style.width || (compStyle || (compStyle = window.getComputedStyle(target))).width) || 0,
+                    height: parseInt(target.style.height || (compStyle || (compStyle = window.getComputedStyle(target))).height) || 0
+                };
+            };
+            /**
+             * Finds the closest parent element using the specified selector.
+             */
+            this.closestParent = function (element, selector) {
+                var target = element, foundTarget = false;
+                while (!(foundTarget = target.matches(selector)) && target.parentElement !== null) {
+                    target = target.parentElement;
+                }
+                if (foundTarget) {
+                    return target;
+                }
+            };
+            document.addEventListener("touchstart", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("touchend", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("touchcancel", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("touchmove", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("mousedown", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("mouseup", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("mousemove", function (evt) { _this.handleInteraction(evt); });
+            document.addEventListener("click", function (evt) { _this.handleInteraction(evt); });
+            this.setupDragHandler();
+            this.setupScaleHandler();
+        }
+        Manager.generateGuid = function () {
+            // http://stackoverflow.com/a/8809472
+            var d = performance.now();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            return uuid;
+        };
+        Manager.prototype.handleInteraction = function (evt) {
+            if (evt instanceof TouchEvent) {
+                for (var i = 0; i < evt.changedTouches.length; i++) {
+                    var touch = evt.changedTouches[i];
+                    var key = "touch-" + touch.identifier;
+                    var target = evt.target;
+                    target.dataset["touch"] = true.toString();
+                    var currentInteraction = this.interactions[key];
+                    if (evt.type.indexOf("start") >= 0) {
+                        this.interactions[key] = new Interaction(key, touch.identifier, evt);
+                    }
+                    else if (evt.type.indexOf("cancel") >= 0) {
+                        this.interactions[key] = null;
+                    }
+                    else if (currentInteraction) {
+                        currentInteraction.update(evt);
+                    }
+                    if (currentInteraction) {
+                        currentInteraction.ending = evt.type.indexOf("end") > 0;
+                        this.interactions[key] = currentInteraction;
+                    }
+                }
+            }
+            else if (evt instanceof MouseEvent) {
+                var id = "mouse";
+                var target = evt.target;
+                if (evt.type.indexOf("click") >= 0) {
+                    if (target.dataset["passclick"] === true.toString()) {
+                        target.dataset["passclick"] = false.toString();
+                        return;
+                    }
+                    else {
+                        evt.stopImmediatePropagation();
+                        evt.preventDefault();
+                        return;
+                    }
+                }
+                if (target.dataset["touch"] === true.toString()) {
+                    if (evt.type.indexOf("up") >= 0) {
+                        target.dataset["touch"] = false.toString();
+                    }
+                    evt.stopImmediatePropagation();
+                    evt.preventDefault();
+                    return;
+                }
+                var currentInteraction = this.interactions[id];
+                if (evt.type.indexOf("down") >= 0) {
+                    this.interactions[id] = new Interaction(id, 0, evt);
+                }
+                else if (currentInteraction) {
+                    currentInteraction.update(evt);
+                }
+                if (currentInteraction) {
+                    currentInteraction.ending = evt.type.indexOf("up") >= 0;
+                    this.interactions[id] = currentInteraction;
+                }
+            }
+            this.coalesceInteractions();
+        };
+        Manager.prototype.coalesceInteractions = function () {
+            var interactions = this.interactions;
+            // It's just easier iterating over arrays
+            var interactionsArr = Object.keys(interactions).map(function (key) { return interactions[key]; });
+            if (interactionsArr.length > 0) {
+                for (var _i = 0, interactionsArr_1 = interactionsArr; _i < interactionsArr_1.length; _i++) {
+                    var interaction = interactionsArr_1[_i];
+                    if (interaction.updated) {
+                        var handled = false;
+                        // First handle scale
+                        if (!handled && interaction.closestScaleElm) {
+                            var matchingScaleInteraction = void 0;
+                            for (var _a = 0, interactionsArr_2 = interactionsArr; _a < interactionsArr_2.length; _a++) {
+                                var tryMatchInteaction = interactionsArr_2[_a];
+                                if (interaction != tryMatchInteaction && tryMatchInteaction.closestScaleElm == interaction.closestScaleElm) {
+                                    matchingScaleInteraction = tryMatchInteaction;
+                                    break;
+                                }
+                            }
+                            if (matchingScaleInteraction) {
+                                // Logic here to emit scaling events based on the movement of the two interaction points
+                                // The plan is to get the left/top most point and based on their previous event set the x/y
+                                // position change (See the drag event below)
+                                // Then get the right/bottom most point and based on their previous event set the width/height 
+                                // change
+                                // Emiting based on change allows us to be very relative with our data and it would work for relative or absolute
+                                // elements
+                                var previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
+                                var currentPosA = interaction.currentEvent.position;
+                                var previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
+                                var currentPosB = matchingScaleInteraction.currentEvent.position;
+                                if (previousPosA && currentPosA && previousPosB && currentPosB) {
+                                    var xDiffA = currentPosA.pageX - previousPosA.pageX;
+                                    var yDiffA = currentPosA.pageY - previousPosA.pageY;
+                                    var xDiffB = currentPosB.pageX - previousPosB.pageX;
+                                    var yDiffB = currentPosB.pageY - previousPosB.pageY;
+                                    var xDiff_1 = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
+                                    var yDiff_1 = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
+                                    var wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff_1 * -1));
+                                    var hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff_1 * -1));
+                                    var evt = new CustomEvent("mt-scale");
+                                    evt.initCustomEvent("mt-scale", true, true, { "x": xDiff_1, "y": yDiff_1, "w": wDiff, "h": hDiff });
+                                    interaction.targetElm.dispatchEvent(evt);
+                                }
+                                handled = true;
+                            }
+                        }
+                        if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending) {
+                            if (interaction.previousEvent) {
+                                var previousPos = interaction.previousEvent.position;
+                                var currentPos = interaction.currentEvent.position;
+                                if (previousPos && currentPos) {
+                                    var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
+                                    var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
+                                    var evt = new CustomEvent("mt-drag");
+                                    evt.initCustomEvent("mt-drag", true, true, { "x": xDiff, "y": yDiff });
+                                    interaction.targetElm.dispatchEvent(evt);
+                                }
+                            }
+                            handled = true;
+                        }
+                        if (!handled && interaction.targetElm) {
+                            if (interaction.startEvent && interaction.currentEvent && interaction.ending) {
+                                if (interaction.currentEvent.time - interaction.startEvent.time < 300) {
+                                    var previousPos = interaction.startEvent.position;
+                                    var currentPos = interaction.currentEvent.position;
+                                    // We could easily use this x-y diff data to be able to 
+                                    // emit swipe events and what not too
+                                    if (previousPos && currentPos) {
+                                        var xDiff_2 = currentPos.pageX - previousPos.pageX;
+                                        xDiff_2 = xDiff_2 < 0 ? xDiff_2 * -1 : 0;
+                                        var yDiff_2 = currentPos.pageY - previousPos.pageY;
+                                        yDiff_2 = yDiff_2 < 0 ? yDiff_2 * -1 : 0;
+                                        if (xDiff_2 < 30 && yDiff_2 < 30) {
+                                            handled = true;
+                                            interaction.targetElm.dataset["passclick"] = true.toString();
+                                            interaction.targetElm.click();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (handled) {
+                            interaction.currentEvent.event.preventDefault();
+                            interaction.currentEvent.event.stopImmediatePropagation();
+                            this.interactions[interaction.key].updated = false;
+                        }
+                        if (interaction.ending) {
+                            delete this.interactions[interaction.key];
+                        }
+                    }
+                }
+            }
+        };
+        return Manager;
+    }());
+    Multitouch.Manager = Manager;
+    var Interaction = (function () {
+        function Interaction(key, index, _event) {
+            this.key = key;
+            this.index = index;
+            this.ending = false;
+            this.updated = true;
+            this.startEvent = new EventWrapper(_event, this.index);
+            this.currentEvent = new EventWrapper(_event, this.index);
+            this.targetElm = this.startEvent.event.target;
+            if (!this.closestDragElm && this.targetElm.classList.contains("mt-draggable")) {
+                this.closestDragElm = this.targetElm;
+            }
+            if (!this.closestScaleElm && this.targetElm.classList.contains("mt-scaleable")) {
+                this.closestScaleElm = this.targetElm;
+            }
+            var parent = this.targetElm.parentElement;
+            while (parent != null) {
+                if (!this.closestDragElm && parent.classList.contains("mt-draggable")) {
+                    this.closestDragElm = parent;
+                }
+                if (!this.closestScaleElm && parent.classList.contains("mt-scaleable")) {
+                    this.closestScaleElm = parent;
+                }
+                parent = parent.parentElement;
+            }
+            if (this.targetElm && !this.targetElm.dataset["uniqueId"]) {
+                this.targetElm.dataset["uniqueId"] = Multitouch.Manager.generateGuid();
+            }
+            if (this.closestDragElm && !this.closestDragElm.dataset["uniqueId"]) {
+                this.closestDragElm.dataset["uniqueId"] = Multitouch.Manager.generateGuid();
+            }
+            if (this.closestScaleElm && !this.closestScaleElm.dataset["uniqueId"]) {
+                this.closestScaleElm.dataset["uniqueId"] = Multitouch.Manager.generateGuid();
+            }
+        }
+        Interaction.prototype.update = function (_event) {
+            this.previousEvent = this.currentEvent;
+            this.currentEvent = new EventWrapper(_event, this.index);
+            this.updated = true;
+        };
+        return Interaction;
+    }());
+    var EventWrapper = (function () {
+        function EventWrapper(event, index) {
+            this.event = event;
+            this.index = index;
+            this.time = performance.now();
+            this.position = this.getEventPostion();
+        }
+        EventWrapper.prototype.getEventPostion = function () {
+            if (event instanceof TouchEvent) {
+                for (var i = 0; i < event.touches.length; i++) {
+                    var touch = event.touches[i];
+                    if (touch.identifier == this.index) {
+                        return {
+                            pageX: touch.pageX,
+                            pageY: touch.pageY
+                        };
+                    }
+                }
+                for (var i = 0; i < event.changedTouches.length; i++) {
+                    var touch = event.changedTouches[i];
+                    if (touch.identifier == this.index) {
+                        return {
+                            pageX: touch.pageX,
+                            pageY: touch.pageY
+                        };
+                    }
+                }
+            }
+            else if (event instanceof MouseEvent) {
+                return {
+                    pageX: event.pageX,
+                    pageY: event.pageY
+                };
+            }
+        };
+        return EventWrapper;
+    }());
+})(Multitouch || (Multitouch = {}));
+(function (d) {
+    var mt = new Multitouch.Manager(d);
+})(document);

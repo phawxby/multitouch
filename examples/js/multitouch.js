@@ -144,7 +144,6 @@ var Multitouch;
             var interactions = this.interactions;
             // It's just easier iterating over arrays
             var interactionsArr = Object.keys(interactions).map(function (key) { return interactions[key]; });
-            console.log(interactionsArr);
             if (interactionsArr.length > 0) {
                 for (var _i = 0, interactionsArr_1 = interactionsArr; _i < interactionsArr_1.length; _i++) {
                     var interaction = interactionsArr_1[_i];
@@ -188,7 +187,6 @@ var Multitouch;
                                 handled = true;
                             }
                         }
-                        // console.log(interaction.targetElm);
                         if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending) {
                             if (interaction.previousEvent) {
                                 var previousPos = interaction.previousEvent.position;

@@ -5,6 +5,7 @@ var gutil = require('gulp-util');
 var ts = require('gulp-typescript');
 var uglify = require('gulp-uglify');
 var opn = require('opn');
+var rename = require("gulp-rename");
 
 /* ------------------------------------------------- */
  
@@ -26,6 +27,9 @@ gulp.task('watch:ts', function () {
 gulp.task('js:compress', function() {
   return gulp.src('./dist/**/*.js')
     .pipe(uglify())
+    .pipe(rename({
+      suffix: ".min"
+    }))
     .pipe(gulp.dest('./dist'));
 });
 
@@ -47,7 +51,9 @@ gulp.task('watch:sass', function () {
 
 /* ------------------------------------------------- */
 
-gulp.task('watch', ['js:compress', 'ts', 'sass', 'watch:sass', 'watch:ts', 'watch:js']);
+gulp.task('build', ['js:compress', 'ts', 'sass']);
+
+gulp.task('watch', ['build', 'watch:sass', 'watch:ts', 'watch:js']);
 
 /* ------------------------------------------------- */
 

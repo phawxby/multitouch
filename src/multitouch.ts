@@ -117,8 +117,6 @@ module Multitouch
             // It's just easier iterating over arrays
             let interactionsArr = Object.keys(interactions).map(function(key) { return interactions[key]; });
 
-            console.log(interactionsArr);
-
             if (interactionsArr.length > 0)
             {
                 for (let interaction of interactionsArr)
@@ -170,14 +168,12 @@ module Multitouch
                                     let evt = new CustomEvent("mt-scale");
                                     evt.initCustomEvent("mt-scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
                                     interaction.targetElm.dispatchEvent(evt);
-                                    //console.log(`Scale event x=${xDiff} y=${yDiff} w=${wDiff} h=${hDiff}`);
                                 }
 
                                 handled = true;
                             }
                         }
 
-                        // console.log(interaction.targetElm);
                         if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending)
                         {
                             if (interaction.previousEvent)
