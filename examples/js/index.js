@@ -13,12 +13,32 @@ document.addEventListener("click", function(e) {
     }
 });
 
-let blocks = document.getElementsByClassName("block");
+let blocks = document.querySelectorAll(".block,.window");
 for (let i = 0; i < blocks.length; i++)
 {
   let block = blocks[i];
+  let blockRect = block.getBoundingClientRect();
+
+  let container = block.parentElement;
+  let rect;
+  while(container != null) 
+  {
+    if (container.nodeName === "BODY") 
+    {
+      rect = container.getBoundingClientRect();
+      break;
+    }
+
+    let style = window.getComputedStyle(container);
+    if (style.position == "relative" || style.position == "absolute") {
+      rect = container.getBoundingClientRect();
+      break;
+    }
+
+    container = container.parentElement;
+  }
 
   block.style.position = "absolute";
-  block.style.left = (Math.random() * (document.documentElement.clientWidth)) + "px"
-  block.style.top = (Math.random() * (document.documentElement.clientHeight)) + "px";
+  block.style.left = (Math.random() * (rect.width - blockRect.width)) + "px"
+  block.style.top = (Math.random() * (rect.height - blockRect.height)) + "px";
 }

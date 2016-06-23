@@ -10,7 +10,7 @@ var Multitouch;
                     var target = e.target;
                     if (target.matches('.mt-draggable')) {
                         var dragTarget = _this.closestParent(target, ".mt-draggable-target") || target;
-                        var styleVals = _this.getStyleValues(dragTarget);
+                        var styleVals = Manager.getStyleValues(dragTarget);
                         if (!styleVals.isPositioned) {
                             dragTarget.style.position = "relative";
                         }
@@ -24,7 +24,7 @@ var Multitouch;
                     var target = e.target;
                     if (target.matches('.mt-scaleable')) {
                         var scaleTarget = _this.closestParent(target, ".mt-scaleable-target") || target;
-                        var styleVals = _this.getStyleValues(scaleTarget);
+                        var styleVals = Manager.getStyleValues(scaleTarget);
                         if (!styleVals.isPositioned) {
                             scaleTarget.style.position = "relative";
                         }
@@ -34,19 +34,6 @@ var Multitouch;
                         scaleTarget.style.height = (styleVals.height + e.detail.h) + "px";
                     }
                 });
-            };
-            /**
-             * Gets the current style values required for positioning and scaling an element.
-             */
-            this.getStyleValues = function (target) {
-                var compStyle;
-                return {
-                    isPositioned: !(!target.style.position && !(compStyle = window.getComputedStyle(target)).position),
-                    top: parseInt(target.style.top || (compStyle || (compStyle = window.getComputedStyle(target))).top) || 0,
-                    left: parseInt(target.style.left || (compStyle || (compStyle = window.getComputedStyle(target))).left) || 0,
-                    width: parseInt(target.style.width || (compStyle || (compStyle = window.getComputedStyle(target))).width) || 0,
-                    height: parseInt(target.style.height || (compStyle || (compStyle = window.getComputedStyle(target))).height) || 0
-                };
             };
             /**
              * Finds the closest parent element using the specified selector.
@@ -148,9 +135,9 @@ var Multitouch;
                 for (var _i = 0, interactionsArr_1 = interactionsArr; _i < interactionsArr_1.length; _i++) {
                     var interaction = interactionsArr_1[_i];
                     if (interaction.updated) {
-                        var handled = false;
+                        var handled = Array();
                         // First handle scale
-                        if (!handled && interaction.closestScaleElm) {
+                        if (!handled.length && interaction.closestScaleElm) {
                             var matchingScaleInteraction = void 0;
                             for (var _a = 0, interactionsArr_2 = interactionsArr; _a < interactionsArr_2.length; _a++) {
                                 var tryMatchInteaction = interactionsArr_2[_a];
@@ -169,39 +156,39 @@ var Multitouch;
                                 // elements
                                 var previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
                                 var currentPosA = interaction.currentEvent.position;
+                                var startPosA = interaction.startEvent.position;
                                 var previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
                                 var currentPosB = matchingScaleInteraction.currentEvent.position;
-                                if (previousPosA && currentPosA && previousPosB && currentPosB) {
-                                    var xDiffA = currentPosA.pageX - previousPosA.pageX;
-                                    var yDiffA = currentPosA.pageY - previousPosA.pageY;
-                                    var xDiffB = currentPosB.pageX - previousPosB.pageX;
-                                    var yDiffB = currentPosB.pageY - previousPosB.pageY;
-                                    var xDiff_1 = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
-                                    var yDiff_1 = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
-                                    var wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff_1 * -1));
-                                    var hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff_1 * -1));
+                                var startPosB = matchingScaleInteraction.startEvent.position;
+                                if (startPosA && currentPosA && startPosB && currentPosB) {
+                                    var xDiff_1 = Math.ceil(startPosA.pageLeft < startPosB.pageLeft ? (currentPosA.targetLeft - startPosA.targetLeft) : (currentPosB.targetLeft - startPosB.targetLeft));
+                                    var yDiff_1 = Math.ceil(startPosA.pageTop < startPosB.pageTop ? (currentPosA.targetTop - startPosA.targetTop) : (currentPosB.targetTop - startPosB.targetTop));
+                                    var wDiff = Math.ceil((startPosA.pageLeft > startPosB.pageLeft ? (currentPosA.targetRight - startPosA.targetRight) : (currentPosB.targetRight - startPosB.targetRight)) + (xDiff_1 * -1));
+                                    var hDiff = Math.ceil((startPosA.pageTop > startPosB.pageTop ? (currentPosA.targetBottom - startPosA.targetBottom) : (currentPosB.targetBottom - startPosB.targetBottom)) + (yDiff_1 * -1));
                                     var evt = new CustomEvent("mt-scale");
                                     evt.initCustomEvent("mt-scale", true, true, { "x": xDiff_1, "y": yDiff_1, "w": wDiff, "h": hDiff });
                                     interaction.targetElm.dispatchEvent(evt);
                                 }
-                                handled = true;
+                                handled.push(interaction);
+                                handled.push(matchingScaleInteraction);
                             }
                         }
-                        if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending) {
+                        if (!handled.length && interaction.closestDragElm && interaction.currentEvent && !interaction.ending) {
                             if (interaction.previousEvent) {
                                 var previousPos = interaction.previousEvent.position;
                                 var currentPos = interaction.currentEvent.position;
+                                var startPos = interaction.startEvent.position;
                                 if (previousPos && currentPos) {
-                                    var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
-                                    var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
+                                    var xDiff = Math.ceil(currentPos.targetLeft - startPos.targetLeft);
+                                    var yDiff = Math.ceil(currentPos.targetTop - startPos.targetTop);
                                     var evt = new CustomEvent("mt-drag");
                                     evt.initCustomEvent("mt-drag", true, true, { "x": xDiff, "y": yDiff });
                                     interaction.targetElm.dispatchEvent(evt);
                                 }
                             }
-                            handled = true;
+                            handled.push(interaction);
                         }
-                        if (!handled && interaction.targetElm) {
+                        if (!handled.length && interaction.targetElm) {
                             if (interaction.startEvent && interaction.currentEvent && interaction.ending) {
                                 if (interaction.currentEvent.time - interaction.startEvent.time < 300) {
                                     var previousPos = interaction.startEvent.position;
@@ -209,12 +196,12 @@ var Multitouch;
                                     // We could easily use this x-y diff data to be able to 
                                     // emit swipe events and what not too
                                     if (previousPos && currentPos) {
-                                        var xDiff_2 = currentPos.pageX - previousPos.pageX;
+                                        var xDiff_2 = currentPos.pageLeft - previousPos.pageLeft;
                                         xDiff_2 = xDiff_2 < 0 ? xDiff_2 * -1 : 0;
-                                        var yDiff_2 = currentPos.pageY - previousPos.pageY;
+                                        var yDiff_2 = currentPos.pageTop - previousPos.pageTop;
                                         yDiff_2 = yDiff_2 < 0 ? yDiff_2 * -1 : 0;
                                         if (xDiff_2 < 30 && yDiff_2 < 30) {
-                                            handled = true;
+                                            handled.push(interaction);
                                             interaction.targetElm.dataset["passclick"] = true.toString();
                                             interaction.targetElm.click();
                                         }
@@ -222,17 +209,31 @@ var Multitouch;
                                 }
                             }
                         }
-                        if (handled) {
-                            interaction.currentEvent.event.preventDefault();
-                            interaction.currentEvent.event.stopImmediatePropagation();
-                            this.interactions[interaction.key].updated = false;
+                        for (var _b = 0, handled_1 = handled; _b < handled_1.length; _b++) {
+                            var handledInteraction = handled_1[_b];
+                            handledInteraction.currentEvent.event.preventDefault();
+                            handledInteraction.currentEvent.event.stopImmediatePropagation();
+                            this.interactions[handledInteraction.key].updated = false;
                         }
-                        if (interaction.ending) {
-                            delete this.interactions[interaction.key];
-                        }
+                    }
+                    if (interaction.ending) {
+                        delete this.interactions[interaction.key];
                     }
                 }
             }
+        };
+        /**
+         * Gets the current style values required for positioning and scaling an element.
+         */
+        Manager.getStyleValues = function (target) {
+            var compStyle;
+            return {
+                isPositioned: !(!target.style.position && !(compStyle = window.getComputedStyle(target)).position),
+                top: parseInt(target.style.top || (compStyle || (compStyle = window.getComputedStyle(target))).top) || 0,
+                left: parseInt(target.style.left || (compStyle || (compStyle = window.getComputedStyle(target))).left) || 0,
+                width: parseInt(target.style.width || (compStyle || (compStyle = window.getComputedStyle(target))).width) || 0,
+                height: parseInt(target.style.height || (compStyle || (compStyle = window.getComputedStyle(target))).height) || 0
+            };
         };
         return Manager;
     }());
@@ -244,8 +245,8 @@ var Multitouch;
             this.ending = false;
             this.updated = true;
             this.startEvent = new EventWrapper(_event, this.index);
-            this.currentEvent = new EventWrapper(_event, this.index);
             this.targetElm = this.startEvent.event.target;
+            this.currentEvent = new EventWrapper(_event, this.index, this.targetElm);
             if (!this.closestDragElm && this.targetElm.classList.contains("mt-draggable")) {
                 this.closestDragElm = this.targetElm;
             }
@@ -274,43 +275,52 @@ var Multitouch;
         }
         Interaction.prototype.update = function (_event) {
             this.previousEvent = this.currentEvent;
-            this.currentEvent = new EventWrapper(_event, this.index);
+            this.currentEvent = new EventWrapper(_event, this.index, this.targetElm);
             this.updated = true;
         };
         return Interaction;
     }());
     var EventWrapper = (function () {
-        function EventWrapper(event, index) {
+        function EventWrapper(event, identifier, target) {
+            if (target === void 0) { target = null; }
             this.event = event;
-            this.index = index;
+            this.identifier = identifier;
             this.time = performance.now();
-            this.position = this.getEventPostion();
+            this.position = this.getEventPostion(target);
         }
-        EventWrapper.prototype.getEventPostion = function () {
+        EventWrapper.prototype.getEventPostion = function (target) {
             if (event instanceof TouchEvent) {
-                for (var i = 0; i < event.touches.length; i++) {
-                    var touch = event.touches[i];
-                    if (touch.identifier == this.index) {
-                        return {
-                            pageX: touch.pageX,
-                            pageY: touch.pageY
-                        };
-                    }
-                }
-                for (var i = 0; i < event.changedTouches.length; i++) {
-                    var touch = event.changedTouches[i];
-                    if (touch.identifier == this.index) {
-                        return {
-                            pageX: touch.pageX,
-                            pageY: touch.pageY
-                        };
+                for (var _i = 0, _a = [event.touches, event.changedTouches]; _i < _a.length; _i++) {
+                    var touchCollection = _a[_i];
+                    for (var i = 0; i < touchCollection.length; i++) {
+                        var touch = touchCollection[i];
+                        if (touch.identifier == this.identifier) {
+                            var t = target || touch.target;
+                            var tStyle = Manager.getStyleValues(t);
+                            return {
+                                pageLeft: touch.pageX,
+                                pageTop: touch.pageY,
+                                target: t,
+                                targetLeft: touch.pageX - t.offsetLeft,
+                                targetTop: touch.pageY - t.offsetTop,
+                                targetRight: touch.pageX - (tStyle.width - t.offsetLeft),
+                                targetBottom: touch.pageY - (tStyle.height - t.offsetTop)
+                            };
+                        }
                     }
                 }
             }
             else if (event instanceof MouseEvent) {
+                var t = target || event.target;
+                var tStyle = Manager.getStyleValues(t);
                 return {
-                    pageX: event.pageX,
-                    pageY: event.pageY
+                    pageLeft: event.pageX,
+                    pageTop: event.pageY,
+                    target: t,
+                    targetLeft: event.pageX - t.offsetLeft,
+                    targetTop: event.pageY - t.offsetTop,
+                    targetRight: event.pageX - (tStyle.width - t.offsetLeft),
+                    targetBottom: event.pageY - (tStyle.height - t.offsetTop)
                 };
             }
         };

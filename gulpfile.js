@@ -25,7 +25,7 @@ gulp.task('watch:ts', function () {
 /* ------------------------------------------------- */
 
 gulp.task('js:compress', function() {
-  return gulp.src('./dist/**/*.js')
+  return gulp.src(['./dist/**/*.js', '!./dist/**/*.min.js'])
     .pipe(uglify())
     .pipe(rename({
       suffix: ".min"

@@ -121,10 +121,10 @@ module Multitouch
                 {
                     if (interaction.updated) 
                     {
-                        let handled = false;
+                        let handled = Array<Interaction>();
 
                         // First handle scale
-                        if (!handled && interaction.closestScaleElm) 
+                        if (!handled.length && interaction.closestScaleElm) 
                         {
                             let matchingScaleInteraction : Interaction;
 
@@ -148,41 +148,40 @@ module Multitouch
 
                                 let previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
                                 let currentPosA = interaction.currentEvent.position;
+                                let startPosA = interaction.startEvent.position;
                                 let previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
                                 let currentPosB = matchingScaleInteraction.currentEvent.position;
+                                let startPosB = matchingScaleInteraction.startEvent.position;
 
-                                if (previousPosA && currentPosA && previousPosB && currentPosB)
+                                if (startPosA && currentPosA && startPosB && currentPosB)
                                 {
-                                    let xDiffA = currentPosA.pageX - previousPosA.pageX;
-                                    let yDiffA = currentPosA.pageY - previousPosA.pageY;
-                                    let xDiffB = currentPosB.pageX - previousPosB.pageX;
-                                    let yDiffB = currentPosB.pageY - previousPosB.pageY;
-
-                                    let xDiff = Math.ceil(currentPosA.pageX < currentPosB.pageX ? xDiffA : xDiffB);
-                                    let yDiff = Math.ceil(currentPosA.pageY < currentPosB.pageY ? yDiffA : yDiffB);
-                                    let wDiff = Math.ceil((currentPosA.pageX < currentPosB.pageX ? xDiffB : xDiffA) + (xDiff * -1));
-                                    let hDiff = Math.ceil((currentPosA.pageY < currentPosB.pageY ? yDiffB : yDiffA) + (yDiff * -1));
+                                    let xDiff = Math.ceil(startPosA.pageLeft < startPosB.pageLeft ? (currentPosA.targetLeft - startPosA.targetLeft) : (currentPosB.targetLeft - startPosB.targetLeft));
+                                    let yDiff = Math.ceil(startPosA.pageTop < startPosB.pageTop ? (currentPosA.targetTop - startPosA.targetTop) : (currentPosB.targetTop - startPosB.targetTop));
+                                    let wDiff = Math.ceil((startPosA.pageLeft > startPosB.pageLeft ? (currentPosA.targetRight - startPosA.targetRight) : (currentPosB.targetRight - startPosB.targetRight)) + (xDiff * -1));
+                                    let hDiff = Math.ceil((startPosA.pageTop > startPosB.pageTop ? (currentPosA.targetBottom - startPosA.targetBottom) : (currentPosB.targetBottom - startPosB.targetBottom)) + (yDiff * -1));
 
                                     let evt = new CustomEvent("mt-scale");
                                     evt.initCustomEvent("mt-scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
                                     interaction.targetElm.dispatchEvent(evt);
                                 }
 
-                                handled = true;
+                                handled.push(interaction);
+                                handled.push(matchingScaleInteraction);
                             }
                         }
 
-                        if (!handled && interaction.closestDragElm && interaction.currentEvent && !interaction.ending)
+                        if (!handled.length && interaction.closestDragElm && interaction.currentEvent && !interaction.ending)
                         {
                             if (interaction.previousEvent)
                             {
                                 let previousPos = interaction.previousEvent.position;
                                 let currentPos = interaction.currentEvent.position;
+                                let startPos = interaction.startEvent.position;
 
                                 if (previousPos && currentPos)
                                 {
-                                    var xDiff = Math.ceil(currentPos.pageX - previousPos.pageX);
-                                    var yDiff = Math.ceil(currentPos.pageY - previousPos.pageY);
+                                    var xDiff = Math.ceil(currentPos.targetLeft - startPos.targetLeft);
+                                    var yDiff = Math.ceil(currentPos.targetTop - startPos.targetTop);
 
                                     let evt = new CustomEvent("mt-drag");
                                     evt.initCustomEvent("mt-drag", true, true, { "x" : xDiff, "y" : yDiff });
@@ -190,10 +189,10 @@ module Multitouch
                                 }
                             }
 
-                            handled = true;
+                            handled.push(interaction);
                         }
 
-                        if (!handled && interaction.targetElm)
+                        if (!handled.length && interaction.targetElm)
                         {
                             if (interaction.startEvent && interaction.currentEvent && interaction.ending) 
                             {
@@ -206,14 +205,14 @@ module Multitouch
                                     // emit swipe events and what not too
                                     if (previousPos && currentPos)
                                     {
-                                        let xDiff = currentPos.pageX - previousPos.pageX;
+                                        let xDiff = currentPos.pageLeft - previousPos.pageLeft;
                                         xDiff = xDiff < 0 ? xDiff * -1 : 0;
-                                        let yDiff = currentPos.pageY - previousPos.pageY;
+                                        let yDiff = currentPos.pageTop - previousPos.pageTop;
                                         yDiff = yDiff < 0 ? yDiff * -1 : 0;
 
                                         if (xDiff < 30 && yDiff < 30)
                                         {
-                                            handled = true;
+                                            handled.push(interaction);
 
                                             interaction.targetElm.dataset["passclick"] = true.toString();
                                             interaction.targetElm.click();
@@ -223,18 +222,18 @@ module Multitouch
                             }
                         }
 
-                        if (handled)
+                        for(let handledInteraction of handled)
                         {
-                            interaction.currentEvent.event.preventDefault();
-                            interaction.currentEvent.event.stopImmediatePropagation();
+                            handledInteraction.currentEvent.event.preventDefault();
+                            handledInteraction.currentEvent.event.stopImmediatePropagation();
 
-                            this.interactions[interaction.key].updated = false;
+                            this.interactions[handledInteraction.key].updated = false;
                         }
+                    }
 
-                        if (interaction.ending)
-                        {
-                            delete this.interactions[interaction.key];
-                        }
+                    if (interaction.ending)
+                    {
+                        delete this.interactions[interaction.key];
                     }
                 }
             }
@@ -247,7 +246,7 @@ module Multitouch
                 if (target.matches('.mt-draggable')) 
                 {
                     let dragTarget = this.closestParent(target, ".mt-draggable-target") || target;
-                    let styleVals = this.getStyleValues(dragTarget);
+                    let styleVals = Manager.getStyleValues(dragTarget);
 
                     if(!styleVals.isPositioned){
                         dragTarget.style.position = "relative";
@@ -267,7 +266,7 @@ module Multitouch
 
                     let scaleTarget = this.closestParent(target, ".mt-scaleable-target") || target;
 
-                    let styleVals = this.getStyleValues(scaleTarget);
+                    let styleVals = Manager.getStyleValues(scaleTarget);
 
                     if(!styleVals.isPositioned){
                         scaleTarget.style.position = "relative";
@@ -283,7 +282,7 @@ module Multitouch
         /**
          * Gets the current style values required for positioning and scaling an element.
          */
-        private getStyleValues = (target: HTMLElement): { isPositioned: boolean; top: number; left: number; height: number; width: number } =>{
+        public static getStyleValues = (target: HTMLElement): { isPositioned: boolean; top: number; left: number; height: number; width: number } =>{
             let compStyle: CSSStyleDeclaration;
             return {
                 isPositioned: !(!target.style.position && !(compStyle = window.getComputedStyle(target)).position),
@@ -325,10 +324,12 @@ module Multitouch
         public closestScaleElm: HTMLElement;
 
         constructor(public key: string, public index: number, _event: UIEvent) {
+
             this.startEvent = new EventWrapper(_event, this.index);
-            this.currentEvent = new EventWrapper(_event, this.index);
 
             this.targetElm = <HTMLElement>this.startEvent.event.target;
+
+            this.currentEvent = new EventWrapper(_event, this.index, this.targetElm);
 
             if (!this.closestDragElm && this.targetElm.classList.contains("mt-draggable")) {
                 this.closestDragElm = this.targetElm;
@@ -363,15 +364,20 @@ module Multitouch
         public update(_event : UIEvent)
         {
             this.previousEvent = this.currentEvent;
-            this.currentEvent = new EventWrapper(_event, this.index);
+            this.currentEvent = new EventWrapper(_event, this.index, this.targetElm);
             this.updated = true;
         }
     }
 
     export interface IPosition
     {
-        pageX : number;
-        pageY : number;
+        pageLeft : number;
+        pageTop : number;
+        target : HTMLElement;
+        targetLeft : number;
+        targetTop : number;
+        targetRight : number;
+        targetBottom : number;
     }
 
     class EventWrapper
@@ -379,44 +385,51 @@ module Multitouch
         public time : number;
         public position : IPosition;
 
-        constructor(public event : UIEvent, public index : number) {
+        constructor(public event : UIEvent, public identifier : number, target : HTMLElement = null) {
             this.time = performance.now();
-            this.position = this.getEventPostion();
+            this.position = this.getEventPostion(target);
         }
 
-        private getEventPostion() : IPosition
+        private getEventPostion(target : HTMLElement) : IPosition
         {
             if (event instanceof TouchEvent)
             {
-                for (let i = 0; i < event.touches.length; i++)
+                for (let touchCollection of [event.touches, event.changedTouches])
                 {
-                    let touch = event.touches[i];
+                    for (let i = 0; i < touchCollection.length; i++)
+                    {
+                        let touch : Touch = touchCollection[i];
+                        if (touch.identifier == this.identifier) 
+                        {
+                            let t : HTMLElement = target || <HTMLElement>touch.target;
+                            let tStyle = Manager.getStyleValues(t);
 
-                    if (touch.identifier == this.index) {
-                        return {
-                            pageX: touch.pageX, 
-                            pageY: touch.pageY
-                        };
-                    }
-                }
-
-                for (let i = 0; i < event.changedTouches.length; i++)
-                {
-                    let touch = event.changedTouches[i];
-
-                    if (touch.identifier == this.index) {
-                        return {
-                            pageX: touch.pageX, 
-                            pageY: touch.pageY
-                        };
+                            return {
+                                pageLeft: touch.pageX, 
+                                pageTop: touch.pageY,
+                                target: t,
+                                targetLeft: touch.pageX - t.offsetLeft,
+                                targetTop: touch.pageY - t.offsetTop,
+                                targetRight: touch.pageX - (tStyle.width - t.offsetLeft),
+                                targetBottom: touch.pageY - (tStyle.height - t.offsetTop)
+                            };
+                        }
                     }
                 }
             }
             else if (event instanceof MouseEvent)
             {
+                let t : HTMLElement = target || <HTMLElement>event.target;
+                let tStyle = Manager.getStyleValues(t);
+
                 return {
-                    pageX: event.pageX, 
-                    pageY: event.pageY
+                    pageLeft: event.pageX, 
+                    pageTop: event.pageY,
+                    target: t,
+                    targetLeft: event.pageX - t.offsetLeft,
+                    targetTop: event.pageY - t.offsetTop,
+                    targetRight: event.pageX - (tStyle.width - t.offsetLeft),
+                    targetBottom: event.pageY - (tStyle.height - t.offsetTop)
                 };
             }
         }
