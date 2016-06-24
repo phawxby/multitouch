@@ -157,8 +157,11 @@ module Multitouch
                                 {
                                     let xDiff = Math.ceil(startPosA.pageLeft < startPosB.pageLeft ? (currentPosA.targetLeft - startPosA.targetLeft) : (currentPosB.targetLeft - startPosB.targetLeft));
                                     let yDiff = Math.ceil(startPosA.pageTop < startPosB.pageTop ? (currentPosA.targetTop - startPosA.targetTop) : (currentPosB.targetTop - startPosB.targetTop));
-                                    let wDiff = Math.ceil((startPosA.pageLeft > startPosB.pageLeft ? (currentPosA.targetRight - startPosA.targetRight) : (currentPosB.targetRight - startPosB.targetRight)) + (xDiff * -1));
-                                    let hDiff = Math.ceil((startPosA.pageTop > startPosB.pageTop ? (currentPosA.targetBottom - startPosA.targetBottom) : (currentPosB.targetBottom - startPosB.targetBottom)) + (yDiff * -1));
+                                    let wDiff = Math.ceil(startPosA.pageLeft > startPosB.pageLeft ? (currentPosA.targetRight - startPosA.targetRight) : (currentPosB.targetRight - startPosB.targetRight));
+                                    let hDiff = Math.ceil(startPosA.pageTop > startPosB.pageTop ? (currentPosA.targetBottom - startPosA.targetBottom) : (currentPosB.targetBottom - startPosB.targetBottom));
+
+                                    wDiff += xDiff * -1;
+                                    hDiff += yDiff * -1;
 
                                     let evt = new CustomEvent("mt-scale");
                                     evt.initCustomEvent("mt-scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
@@ -410,8 +413,8 @@ module Multitouch
                                 target: t,
                                 targetLeft: touch.pageX - t.offsetLeft,
                                 targetTop: touch.pageY - t.offsetTop,
-                                targetRight: touch.pageX - (tStyle.width - t.offsetLeft),
-                                targetBottom: touch.pageY - (tStyle.height - t.offsetTop)
+                                targetRight: touch.pageX - (tStyle.width + t.offsetLeft),
+                                targetBottom: touch.pageY - (tStyle.height + t.offsetTop)
                             };
                         }
                     }
@@ -428,8 +431,8 @@ module Multitouch
                     target: t,
                     targetLeft: event.pageX - t.offsetLeft,
                     targetTop: event.pageY - t.offsetTop,
-                    targetRight: event.pageX - (tStyle.width - t.offsetLeft),
-                    targetBottom: event.pageY - (tStyle.height - t.offsetTop)
+                    targetRight: event.pageX - (tStyle.width + t.offsetLeft),
+                    targetBottom: event.pageY - (tStyle.height + t.offsetTop)
                 };
             }
         }
