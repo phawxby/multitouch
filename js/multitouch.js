@@ -120,6 +120,7 @@ var Multitouch;
                                     if (previousPos && currentPos) {
                                         var xDiff = Math.ceil(currentPos.targetLeft - startPos.targetLeft);
                                         var yDiff = Math.ceil(currentPos.targetTop - startPos.targetTop);
+                                        console.log(currentPos);
                                         var evt = new CustomEvent("mt-drag");
                                         evt.initCustomEvent("mt-drag", true, true, { "x": xDiff, "y": yDiff });
                                         interaction.targetElm.dispatchEvent(evt);
@@ -299,14 +300,26 @@ var Multitouch;
                         if (touch.identifier == this.identifier) {
                             var t = target || touch.target;
                             var tStyle = Manager.getStyleValues(t);
+                            var offsetLeft = 0;
+                            var offsetTop = 0;
+                            var startElm = t;
+                            while (startElm != null) {
+                                if (!isNaN(startElm.offsetLeft)) {
+                                    offsetLeft += startElm.offsetLeft;
+                                }
+                                if (!isNaN(startElm.offsetTop)) {
+                                    offsetTop += startElm.offsetTop;
+                                }
+                                startElm = startElm.offsetParent;
+                            }
                             return {
                                 pageLeft: touch.pageX,
                                 pageTop: touch.pageY,
                                 target: t,
-                                targetLeft: touch.pageX - t.offsetLeft,
-                                targetTop: touch.pageY - t.offsetTop,
-                                targetRight: touch.pageX - (tStyle.width + t.offsetLeft),
-                                targetBottom: touch.pageY - (tStyle.height + t.offsetTop)
+                                targetLeft: touch.pageX - offsetLeft,
+                                targetTop: touch.pageY - offsetTop,
+                                targetRight: touch.pageX - (tStyle.width + offsetLeft),
+                                targetBottom: touch.pageY - (tStyle.height + offsetTop)
                             };
                         }
                     }
@@ -315,14 +328,26 @@ var Multitouch;
             else if (event instanceof MouseEvent) {
                 var t = target || event.target;
                 var tStyle = Manager.getStyleValues(t);
+                var offsetLeft = 0;
+                var offsetTop = 0;
+                var startElm = t;
+                while (startElm != null) {
+                    if (!isNaN(startElm.offsetLeft)) {
+                        offsetLeft += startElm.offsetLeft;
+                    }
+                    if (!isNaN(startElm.offsetTop)) {
+                        offsetTop += startElm.offsetTop;
+                    }
+                    startElm = startElm.offsetParent;
+                }
                 return {
                     pageLeft: event.pageX,
                     pageTop: event.pageY,
                     target: t,
-                    targetLeft: event.pageX - t.offsetLeft,
-                    targetTop: event.pageY - t.offsetTop,
-                    targetRight: event.pageX - (tStyle.width + t.offsetLeft),
-                    targetBottom: event.pageY - (tStyle.height + t.offsetTop)
+                    targetLeft: event.pageX - offsetLeft,
+                    targetTop: event.pageY - offsetTop,
+                    targetRight: event.pageX - (tStyle.width + offsetLeft),
+                    targetBottom: event.pageY - (tStyle.height + offsetTop)
                 };
             }
         };
