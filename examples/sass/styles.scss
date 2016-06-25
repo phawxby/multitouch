@@ -59,3 +59,26 @@ body {
         border-color: green;
     }
 }
+
+.window {
+  display: inline-block;
+  width: 50%;
+  max-width: 400px;
+  border: 1px solid #ddd;
+  
+  background-color: #fff;
+  overflow: hidden; 
+
+    > div {
+        padding: 1rem;
+    }
+
+    > div.mt-draggable {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -ms-user-select: none;
+        cursor: move;
+        background-color: #aaa;
+    }
+}
