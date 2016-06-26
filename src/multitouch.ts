@@ -7,8 +7,8 @@ module Multitouch
     export class Manager {
         private interactions : Dictionary<Interaction> = {};
 
-        public static get SCALABLE_CLASS():string { return ".mt-scaleable" };
-        public static get SCALABLE_TARGET_CLASS():string { return ".mt-scaleable-target" };
+        public static get SCALABLE_CLASS():string { return ".mt-scalable" };
+        public static get SCALABLE_TARGET_CLASS():string { return ".mt-scalable-target" };
         public static get DRAGGABLE_CLASS():string { return ".mt-draggable" };
         public static get DRAGGABLE_TARGET_CLASS():string { return ".mt-draggable-target" };
 

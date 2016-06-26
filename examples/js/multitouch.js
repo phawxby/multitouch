@@ -198,9 +198,9 @@ var Multitouch;
             this.setupDragHandler();
             this.setupScaleHandler();
         }
-        static get SCALABLE_CLASS() { return ".mt-scaleable"; }
+        static get SCALABLE_CLASS() { return ".mt-scalable"; }
         ;
-        static get SCALABLE_TARGET_CLASS() { return ".mt-scaleable-target"; }
+        static get SCALABLE_TARGET_CLASS() { return ".mt-scalable-target"; }
         ;
         static get DRAGGABLE_CLASS() { return ".mt-draggable"; }
         ;
