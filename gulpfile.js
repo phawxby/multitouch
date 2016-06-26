@@ -12,7 +12,8 @@ var rename = require("gulp-rename");
 gulp.task('ts', function () {
     return gulp.src('./src/**/*.ts')
         .pipe(ts({
-            noImplicitAny: true
+            noImplicitAny: true,
+            target : "ES6"
         }).on('error', gutil.log))
         .pipe(gulp.dest('./dist'))
         .pipe(gulp.dest('./examples/js'));
@@ -26,7 +27,7 @@ gulp.task('watch:ts', function () {
 
 gulp.task('js:compress', function() {
   return gulp.src(['./dist/**/*.js', '!./dist/**/*.min.js'])
-    .pipe(uglify())
+    //.pipe(uglify())
     .pipe(rename({
       suffix: ".min"
     }))

@@ -431,7 +431,6 @@ body {
 .window {
   display: inline-block;
   width: 50%;
-  max-width: 400px;
   border: 1px solid #ddd;
   background-color: #fff;
   overflow: hidden; }

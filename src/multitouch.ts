@@ -7,6 +7,11 @@ module Multitouch
     export class Manager {
         private interactions : Dictionary<Interaction> = {};
 
+        public static get SCALABLE_CLASS():string { return ".mt-scaleable" };
+        public static get SCALABLE_TARGET_CLASS():string { return ".mt-scaleable-target" };
+        public static get DRAGGABLE_CLASS():string { return ".mt-draggable" };
+        public static get DRAGGABLE_TARGET_CLASS():string { return ".mt-draggable-target" };
+
         public static generateGuid() : string
         {
             // http://stackoverflow.com/a/8809472
@@ -146,12 +151,10 @@ module Multitouch
                                 // Emiting based on change allows us to be very relative with our data and it would work for relative or absolute
                                 // elements
 
-                                let previousPosA = interaction.previousEvent ? interaction.previousEvent.position : interaction.currentEvent.position;
-                                let currentPosA = interaction.currentEvent.position;
-                                let startPosA = interaction.startEvent.position;
-                                let previousPosB = matchingScaleInteraction.previousEvent ? matchingScaleInteraction.previousEvent.position : matchingScaleInteraction.currentEvent.position;
-                                let currentPosB = matchingScaleInteraction.currentEvent.position;
-                                let startPosB = matchingScaleInteraction.startEvent.position;
+                                let currentPosA = interaction.currentEvent.position[Manager.SCALABLE_CLASS];
+                                let startPosA = interaction.startEvent.position[Manager.SCALABLE_CLASS];
+                                let currentPosB = matchingScaleInteraction.currentEvent.position[Manager.SCALABLE_CLASS];
+                                let startPosB = matchingScaleInteraction.startEvent.position[Manager.SCALABLE_CLASS];
 
                                 if (startPosA && currentPosA && startPosB && currentPosB)
                                 {
@@ -162,6 +165,8 @@ module Multitouch
 
                                     wDiff += xDiff * -1;
                                     hDiff += yDiff * -1;
+
+                                    console.log( xDiff, yDiff, wDiff, hDiff );
 
                                     let evt = new CustomEvent("mt-scale");
                                     evt.initCustomEvent("mt-scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
@@ -177,16 +182,13 @@ module Multitouch
                         {
                             if (interaction.previousEvent)
                             {
-                                let previousPos = interaction.previousEvent.position;
-                                let currentPos = interaction.currentEvent.position;
-                                let startPos = interaction.startEvent.position;
+                                let currentPos = interaction.currentEvent.position[Manager.DRAGGABLE_CLASS];
+                                let startPos = interaction.startEvent.position[Manager.DRAGGABLE_CLASS];
 
-                                if (previousPos && currentPos)
+                                if (startPos && currentPos)
                                 {
                                     var xDiff = Math.ceil(currentPos.targetLeft - startPos.targetLeft);
                                     var yDiff = Math.ceil(currentPos.targetTop - startPos.targetTop);
-
-                                    console.log(currentPos);
 
                                     let evt = new CustomEvent("mt-drag");
                                     evt.initCustomEvent("mt-drag", true, true, { "x" : xDiff, "y" : yDiff });
@@ -203,8 +205,8 @@ module Multitouch
                             {
                                 if (interaction.currentEvent.time - interaction.startEvent.time < 300)
                                 {
-                                    let previousPos = interaction.startEvent.position;
-                                    let currentPos = interaction.currentEvent.position;
+                                    let previousPos = interaction.startEvent.position["target"];
+                                    let currentPos = interaction.currentEvent.position["target"];
 
                                     // We could easily use this x-y diff data to be able to 
                                     // emit swipe events and what not too
@@ -248,9 +250,11 @@ module Multitouch
             this.document.addEventListener("mt-drag", (e : CustomEvent) => {
                 let target = <HTMLElement>e.target;
 
-                if (target.matches('.mt-draggable')) 
+                let closestDraggable = Manager.closest(target, Manager.DRAGGABLE_CLASS);
+
+                if (closestDraggable) 
                 {
-                    let dragTarget = this.closestParent(target, ".mt-draggable-target") || target;
+                    let dragTarget = Manager.closest(closestDraggable, Manager.DRAGGABLE_TARGET_CLASS) || closestDraggable;
                     let styleVals = Manager.getStyleValues(dragTarget);
 
                     if(!styleVals.isPositioned){
@@ -265,11 +269,12 @@ module Multitouch
         private setupScaleHandler = () => {
             this.document.addEventListener("mt-scale", (e : CustomEvent) => {
                 let target = <HTMLElement>e.target;
+                
+                let closestScalable = Manager.closest(target, Manager.SCALABLE_CLASS);
 
-                if (target.matches('.mt-scaleable')) 
+                if (closestScalable) 
                 {
-
-                    let scaleTarget = this.closestParent(target, ".mt-scaleable-target") || target;
+                    let scaleTarget = Manager.closest(closestScalable, Manager.SCALABLE_TARGET_CLASS) || closestScalable;
 
                     let styleVals = Manager.getStyleValues(scaleTarget);
 
@@ -301,9 +306,13 @@ module Multitouch
         /**
          * Finds the closest parent element using the specified selector.
          */
-        private closestParent = (element: HTMLElement, selector: string): HTMLElement => {
+        public static closest = (element: HTMLElement, selector: string): HTMLElement => {
             let target = element, 
                 foundTarget = false;
+
+            if (target.matches(selector)) {
+                return target;
+            }
 
             while (!(foundTarget = target.matches(selector)) && target.parentElement !== null) {
                 target = target.parentElement;
@@ -336,34 +345,8 @@ module Multitouch
 
             this.currentEvent = new EventWrapper(_event, this.index, this.targetElm);
 
-            if (!this.closestDragElm && this.targetElm.classList.contains("mt-draggable")) {
-                this.closestDragElm = this.targetElm;
-            } 
-            if (!this.closestScaleElm && this.targetElm.classList.contains("mt-scaleable")) {
-                this.closestScaleElm = this.targetElm;
-            } 
-
-            var parent = this.targetElm.parentElement;
-            while (parent != null) {
-                if (!this.closestDragElm && parent.classList.contains("mt-draggable")) {
-                    this.closestDragElm = parent;
-                } 
-                if (!this.closestScaleElm && parent.classList.contains("mt-scaleable")) {
-                    this.closestScaleElm = parent;
-                } 
-
-                parent = parent.parentElement;
-            }
-
-            if (this.targetElm && !this.targetElm.dataset["uniqueId"]) {
-                this.targetElm.dataset["uniqueId"] = Multitouch.Manager.generateGuid();
-            }
-            if (this.closestDragElm && !this.closestDragElm.dataset["uniqueId"]) {
-                this.closestDragElm.dataset["uniqueId"] = Multitouch.Manager.generateGuid();
-            }
-            if (this.closestScaleElm && !this.closestScaleElm.dataset["uniqueId"]) {
-                this.closestScaleElm.dataset["uniqueId"] = Multitouch.Manager.generateGuid();
-            }
+            this.closestDragElm = Manager.closest(this.targetElm, Manager.DRAGGABLE_CLASS);
+            this.closestScaleElm = Manager.closest(this.targetElm, Manager.SCALABLE_CLASS);
         }
 
         public update(_event : UIEvent)
@@ -388,83 +371,106 @@ module Multitouch
     class EventWrapper
     {
         public time : number;
-        public position : IPosition;
+        public position : Dictionary<IPosition>;
 
         constructor(public event : UIEvent, public identifier : number, target : HTMLElement = null) {
             this.time = performance.now();
             this.position = this.getEventPostion(target);
         }
 
-        private getEventPostion(target : HTMLElement) : IPosition
+        private getEventPostion(target : HTMLElement) : Dictionary<IPosition>
         {
-            if (event instanceof TouchEvent)
+            let positions : Dictionary<IPosition> = {};
+
+            for (let elmRel of ["target", Manager.DRAGGABLE_CLASS, Manager.SCALABLE_CLASS])
             {
-                for (let touchCollection of [event.touches, event.changedTouches])
+                if (event instanceof TouchEvent)
                 {
-                    for (let i = 0; i < touchCollection.length; i++)
+                    for (let touchCollection of [event.touches, event.changedTouches])
                     {
-                        let touch : Touch = touchCollection[i];
-                        if (touch.identifier == this.identifier) 
+                        for (let i = 0; i < touchCollection.length; i++)
                         {
-                            let t : HTMLElement = target || <HTMLElement>touch.target;
-                            let tStyle = Manager.getStyleValues(t);
-
-                            let offsetLeft = 0;
-                            let offsetTop = 0;
-                            let startElm = t;
-                            while (startElm != null)
+                            let touch : Touch = touchCollection[i];
+                            if (touch.identifier == this.identifier) 
                             {
-                                if (!isNaN(startElm.offsetLeft)) {
-                                    offsetLeft += startElm.offsetLeft;
-                                }
-                                if (!isNaN(startElm.offsetTop)) {
-                                    offsetTop += startElm.offsetTop;
-                                }
-                                startElm = <HTMLElement>startElm.offsetParent;
-                            }
+                                let t : HTMLElement = target || <HTMLElement>touch.target;
 
-                            return {
-                                pageLeft: touch.pageX, 
-                                pageTop: touch.pageY,
-                                target: t,
-                                targetLeft: touch.pageX - offsetLeft,
-                                targetTop: touch.pageY - offsetTop,
-                                targetRight: touch.pageX - (tStyle.width + offsetLeft),
-                                targetBottom: touch.pageY - (tStyle.height + offsetTop)
-                            };
+                                if (elmRel !== "target") {
+                                    t = Manager.closest(t, elmRel);
+                                }
+
+                                if (t != null)
+                                {
+                                    let tStyle = Manager.getStyleValues(t);
+
+                                    let offsetLeft = 0;
+                                    let offsetTop = 0;
+                                    let startElm = t;
+                                    while (startElm != null)
+                                    {
+                                        if (!isNaN(startElm.offsetLeft)) {
+                                            offsetLeft += startElm.offsetLeft;
+                                        }
+                                        if (!isNaN(startElm.offsetTop)) {
+                                            offsetTop += startElm.offsetTop;
+                                        }
+                                        startElm = <HTMLElement>startElm.offsetParent;
+                                    }
+
+                                    positions[elmRel] = {
+                                        pageLeft: touch.pageX, 
+                                        pageTop: touch.pageY,
+                                        target: t,
+                                        targetLeft: touch.pageX - offsetLeft,
+                                        targetTop: touch.pageY - offsetTop,
+                                        targetRight: touch.pageX - (tStyle.width + offsetLeft),
+                                        targetBottom: touch.pageY - (tStyle.height + offsetTop)
+                                    };
+                                }
+                            }
                         }
                     }
                 }
-            }
-            else if (event instanceof MouseEvent)
-            {
-                let t : HTMLElement = target || <HTMLElement>event.target;
-                let tStyle = Manager.getStyleValues(t);
-
-                let offsetLeft = 0;
-                let offsetTop = 0;
-                let startElm = t;
-                while (startElm != null)
+                else if (event instanceof MouseEvent)
                 {
-                    if (!isNaN(startElm.offsetLeft)) {
-                        offsetLeft += startElm.offsetLeft;
-                    }
-                    if (!isNaN(startElm.offsetTop)) {
-                        offsetTop += startElm.offsetTop;
-                    }
-                    startElm = <HTMLElement>startElm.offsetParent;
-                }
+                    let t : HTMLElement = target || <HTMLElement>event.target;
 
-                return {
-                    pageLeft: event.pageX, 
-                    pageTop: event.pageY,
-                    target: t,
-                    targetLeft: event.pageX - offsetLeft,
-                    targetTop: event.pageY - offsetTop,
-                    targetRight: event.pageX - (tStyle.width + offsetLeft),
-                    targetBottom: event.pageY - (tStyle.height + offsetTop)
-                };
+                    if (elmRel !== "target") {
+                        t = Manager.closest(t, elmRel);
+                    }
+
+                    if (t != null)
+                    {
+                        let tStyle = Manager.getStyleValues(t);
+
+                        let offsetLeft = 0;
+                        let offsetTop = 0;
+                        let startElm = t;
+                        while (startElm != null)
+                        {
+                            if (!isNaN(startElm.offsetLeft)) {
+                                offsetLeft += startElm.offsetLeft;
+                            }
+                            if (!isNaN(startElm.offsetTop)) {
+                                offsetTop += startElm.offsetTop;
+                            }
+                            startElm = <HTMLElement>startElm.offsetParent;
+                        }
+
+                        positions[elmRel] = {
+                            pageLeft: event.pageX, 
+                            pageTop: event.pageY,
+                            target: t,
+                            targetLeft: event.pageX - offsetLeft,
+                            targetTop: event.pageY - offsetTop,
+                            targetRight: event.pageX - (tStyle.width + offsetLeft),
+                            targetBottom: event.pageY - (tStyle.height + offsetTop)
+                        };
+                    }
+                }
             }
+
+            return positions;
         }
     }
 }
