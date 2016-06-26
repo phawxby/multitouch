@@ -30,7 +30,6 @@
 .window {
   display: inline-block;
   width: 70vw;
-  max-width: 300px;
   border: 1px solid #ddd;
   
   background-color: #fff;
