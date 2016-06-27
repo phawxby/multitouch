@@ -274,7 +274,7 @@ var Multitouch;
             this.closestDragElm = Manager.closest(this.targetElm, Manager.DRAGGABLE_CLASS);
             this.closestScaleElm = Manager.closest(this.targetElm, Manager.SCALABLE_CLASS);
             let findScrollingElm = this.targetElm;
-            while (findScrollingElm != null) {
+            while (findScrollingElm != null && findScrollingElm.nodeName !== "BODY") {
                 if (findScrollingElm.scrollHeight > findScrollingElm.getBoundingClientRect().height + 2) {
                     this.closestScrollingElm = findScrollingElm;
                     break;
