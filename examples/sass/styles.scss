@@ -61,23 +61,32 @@ body {
 }
 
 .window {
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  align-content: stretch;
   width: 50%;
   border: 1px solid #ddd;
-  
   background-color: #fff;
   overflow: hidden; 
+  max-height: 70vh;
 
     > div {
         padding: 1rem;
     }
 
-    > div.mt-draggable {
+    > div.window-title {
         -webkit-user-select: none;
         -moz-user-select: none;
         -khtml-user-select: none;
         -ms-user-select: none;
         cursor: move;
         background-color: #aaa;
+        flex-basis: content;
+    }
+
+    > div.window-body {
+        overflow: auto;
     }
 }
