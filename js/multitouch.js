@@ -125,7 +125,7 @@ var Multitouch;
                                 if (interaction.startEvent && interaction.currentEvent) {
                                     let startPos = interaction.startEvent.position["target"];
                                     let currentPos = interaction.currentEvent.position["target"];
-                                    if (interaction.currentEvent.time - interaction.startEvent.time < 300) {
+                                    if (interaction.ending && interaction.currentEvent.time - interaction.startEvent.time < 300) {
                                         let xDiff = currentPos.pageLeft - startPos.pageLeft;
                                         let yDiff = currentPos.pageTop - startPos.pageTop;
                                         xDiff = xDiff < 0 ? xDiff * -1 : 0;
