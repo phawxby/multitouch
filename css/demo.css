@@ -37,7 +37,7 @@
   border: 1px solid #ddd;
   background-color: #fff;
   overflow: hidden;
-  max-height: 70vh; }
+  max-height: 250px; }
   .window > div {
     padding: 1rem; }
   .window > div.window-title {
