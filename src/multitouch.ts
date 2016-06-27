@@ -167,8 +167,6 @@ module Multitouch
                                     wDiff += xDiff * -1;
                                     hDiff += yDiff * -1;
 
-                                    console.log( xDiff, yDiff, wDiff, hDiff );
-
                                     let evt = new CustomEvent("mt-scale");
                                     evt.initCustomEvent("mt-scale", true, true, { "x" : xDiff, "y" : yDiff, "w" : wDiff, "h" : hDiff });
                                     interaction.targetElm.dispatchEvent(evt);
@@ -206,7 +204,6 @@ module Multitouch
                             {
                                 let startPos = interaction.startEvent.position["target"];
                                 let currentPos = interaction.currentEvent.position["target"];
-                                let previousPos = interaction.previousEvent.position["target"];
                                 
                                 if (interaction.currentEvent.time - interaction.startEvent.time < 300)
                                 {
@@ -229,8 +226,10 @@ module Multitouch
                                     }
                                 }
 
-                                if (!handled.length && interaction.closestScrollingElm && previousPos)
+                                if (!handled.length && interaction.closestScrollingElm && interaction.previousEvent)
                                 {
+                                    let previousPos = interaction.previousEvent.position["target"];
+                                    
                                     let xDiff = currentPos.pageLeft - previousPos.pageLeft;
                                     let yDiff = currentPos.pageTop - previousPos.pageTop;
 
