@@ -47,6 +47,7 @@
     -ms-user-select: none;
     cursor: move;
     background-color: #aaa;
+    min-height: 3.5rem;
     flex-basis: content; }
   .window > div.window-body {
     overflow: auto; }
