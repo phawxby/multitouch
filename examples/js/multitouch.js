@@ -123,23 +123,32 @@ var Multitouch;
                                 handled.push(interaction);
                             }
                             if (!handled.length && interaction.targetElm) {
-                                if (interaction.startEvent && interaction.currentEvent && interaction.ending) {
+                                if (interaction.startEvent && interaction.currentEvent) {
+                                    let startPos = interaction.startEvent.position["target"];
+                                    let currentPos = interaction.currentEvent.position["target"];
+                                    let previousPos = interaction.previousEvent.position["target"];
                                     if (interaction.currentEvent.time - interaction.startEvent.time < 300) {
-                                        let previousPos = interaction.startEvent.position["target"];
-                                        let currentPos = interaction.currentEvent.position["target"];
+                                        let xDiff = currentPos.pageLeft - startPos.pageLeft;
+                                        let yDiff = currentPos.pageTop - startPos.pageTop;
+                                        xDiff = xDiff < 0 ? xDiff * -1 : 0;
+                                        yDiff = yDiff < 0 ? yDiff * -1 : 0;
                                         // We could easily use this x-y diff data to be able to 
                                         // emit swipe events and what not too
-                                        if (previousPos && currentPos) {
-                                            let xDiff = currentPos.pageLeft - previousPos.pageLeft;
-                                            xDiff = xDiff < 0 ? xDiff * -1 : 0;
-                                            let yDiff = currentPos.pageTop - previousPos.pageTop;
-                                            yDiff = yDiff < 0 ? yDiff * -1 : 0;
+                                        if (startPos && currentPos) {
                                             if (xDiff < 30 && yDiff < 30) {
                                                 handled.push(interaction);
                                                 interaction.targetElm.dataset["passclick"] = true.toString();
                                                 interaction.targetElm.click();
                                             }
                                         }
+                                    }
+                                    if (!handled.length && interaction.closestScrollingElm && previousPos) {
+                                        let xDiff = currentPos.pageLeft - previousPos.pageLeft;
+                                        let yDiff = currentPos.pageTop - previousPos.pageTop;
+                                        let evt = new CustomEvent("mt-scroll");
+                                        evt.initCustomEvent("mt-scroll", true, true, { "x": xDiff, "y": yDiff });
+                                        interaction.closestScrollingElm.dispatchEvent(evt);
+                                        handled.push(interaction);
                                     }
                                 }
                             }
@@ -187,6 +196,13 @@ var Multitouch;
                     }
                 });
             };
+            this.setupScrollHandler = () => {
+                this.document.addEventListener("mt-scroll", (e) => {
+                    let target = e.target;
+                    target.scrollLeft -= e.detail.x;
+                    target.scrollTop -= e.detail.y;
+                });
+            };
             document.addEventListener("touchstart", (evt) => { this.handleInteraction(evt); });
             document.addEventListener("touchend", (evt) => { this.handleInteraction(evt); });
             document.addEventListener("touchcancel", (evt) => { this.handleInteraction(evt); });
@@ -197,6 +213,7 @@ var Multitouch;
             document.addEventListener("click", (evt) => { this.handleInteraction(evt); });
             this.setupDragHandler();
             this.setupScaleHandler();
+            this.setupScrollHandler();
         }
         static get SCALABLE_CLASS() { return ".mt-scalable"; }
         ;
@@ -257,6 +274,14 @@ var Multitouch;
             this.currentEvent = new EventWrapper(_event, this.index, this.targetElm);
             this.closestDragElm = Manager.closest(this.targetElm, Manager.DRAGGABLE_CLASS);
             this.closestScaleElm = Manager.closest(this.targetElm, Manager.SCALABLE_CLASS);
+            let findScrollingElm = this.targetElm;
+            while (findScrollingElm != null) {
+                if (findScrollingElm.scrollHeight > findScrollingElm.getBoundingClientRect().height + 2) {
+                    this.closestScrollingElm = findScrollingElm;
+                    break;
+                }
+                findScrollingElm = findScrollingElm.parentElement;
+            }
         }
         update(_event) {
             this.previousEvent = this.currentEvent;
