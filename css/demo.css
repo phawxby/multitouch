@@ -28,23 +28,25 @@
 }
 
 .window {
-  display: inline-block;
-  width: 70vw;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  align-content: stretch;
+  width: 50%;
   border: 1px solid #ddd;
-  
   background-color: #fff;
-  overflow: hidden; 
-}
-
-.window > div {
-  padding: 1rem;
-}
-
-.window > div.mt-draggable {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -khtml-user-select: none;
-  -ms-user-select: none;
-  cursor: move;
-  background-color: #aaa;
-}
+  overflow: hidden;
+  max-height: 70vh; }
+  .window > div {
+    padding: 1rem; }
+  .window > div.window-title {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -ms-user-select: none;
+    cursor: move;
+    background-color: #aaa;
+    flex-basis: content; }
+  .window > div.window-body {
+    overflow: auto; }
